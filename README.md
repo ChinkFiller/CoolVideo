@@ -8,10 +8,7 @@
 * 支持外链播放和本地资源播放
 
 ## App端截图
-<img src="Images/index.png" style="width: 24%">
-<img src="Images/player.png" style="width: 24%">
-<img src="Images/weeks.png" style="width: 24%">
-<img src="Images/drew.png" style="width: 24%">
+<img src="Images/index.png" style="width: 24%"><img src="Images/player.png" style="width: 24%"><img src="Images/weeks.png" style="width: 24%"><img src="Images/drew.png" style="width: 24%">
 
 ## CoolVideo(库视频)有哪些功能？
 * 支持多种`媒体方式`
