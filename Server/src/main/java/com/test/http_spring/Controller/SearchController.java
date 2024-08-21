@@ -137,6 +137,7 @@ public class SearchController {
             }else{//外链解析或者CDN资源解析
                 String code=id+":"+num;
                 if (urlDatas.containsKey(code)&&ToolsFunction.checkUrlState(urlDatas.get(code))){
+                    back.put("isOther",1);
                     back.put("url",urlDatas.get(code));
                     return ToolsFunction.backSuccessDataMap(back);
                 }
