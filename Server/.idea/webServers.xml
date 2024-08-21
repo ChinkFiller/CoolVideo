@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="ea93fbc8-3542-47c3-8198-79c8b3e931ee" name="新加坡云主机保护模式连接">
+        <fileTransfer accessType="SFTP" host="127.0.0.1" port="1998" sshConfigId="1ddc30a4-6027-44d4-a3f2-9c143084eeb7" sshConfig="root@127.0.0.1:1998 password">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" keepAliveTimeout="0" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

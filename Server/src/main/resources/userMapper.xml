@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.test.http_spring.mapper.usersMapper">
+    <select id="findAllUser" resultType="com.test.http_spring.pojo.users">
+        select * from userlib;
+    </select>
+    <select id="getOneUserByName" parameterType="String" resultType="com.test.http_spring.pojo.users">
+        select * from userlib where user='${name}';
+    </select>
+    <select id="getOneUserByToken" parameterType="String" resultType="com.test.http_spring.pojo.users">
+        select * from userlib where cookie='${token}';
+    </select>
+    <update id="updateUserSetting" parameterType="String">
+        update userlib set setting='${data}' where cookie='${token}';
+    </update>
+    <update id="updateUserToken" parameterType="String">
+        update userlib set cookie='${token}' where user='${name}';
+    </update>
+    <update id="updateUserIcon" parameterType="String">
+        update userlib set icon='${icon}' where cookie='${token}';
+    </update>
+    <update id="updateUserName" parameterType="String">
+        update userlib set name='${name}' where cookie='${token}';
+    </update>
+    <insert id="createUser" parameterType="com.test.http_spring.pojo.users">
+        insert into userlib values ('${user}','${pawd}','','${name}','${icon}','{"allow":[],"agree":[],"history":[]}',#{vip})
+    </insert>
+    <delete id="removeOneUser" parameterType="String">
+        delete from userlib where user='${username}'
+    </delete>
+    <update id="updateOneUser" parameterType="com.test.http_spring.pojo.users">
+        update userlib set name='${name}',pawd='${pawd}',vip='${vip}' where user='${user}'
+    </update>
+</mapper>

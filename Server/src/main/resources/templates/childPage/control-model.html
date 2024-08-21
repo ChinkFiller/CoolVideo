@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/static/layui/layui.js"></script>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <script src="/static/utils/tools.js"></script>
+    <link href="/static/main/controls.css" rel="stylesheet">
+</head>
+<body>
+<div class="main-table">
+    <div class="layui-panel" style="padding:15px;margin:10px 0px 10px 0px;text-align:center">
+        <p style="font-size: 20px" th:text="${title}"></p>
+    </div>
+    <div class="layui-form" style="display: flex;margin-top: 10px;margin-bottom: 10px">
+        <input type="text" name="" placeholder="搜索" class="layui-input" id="search_bar" onkeydown="handelKeypass(event)" oninput="search(document.getElementById('search_bar').value)">
+        &nbsp;&nbsp;&nbsp;&nbsp;
+        <button type="button" class="layui-btn layui-btn-normal layui-btn-radius" onclick="search(document.getElementById('search_bar').value)">搜索</button>
+    </div>
+    <div style="width: 100%;margin-bottom: 15px;margin-top: 15px" >
+        <button class="layui-btn layui-btn-primary layui-border" onclick="addOneData(apiAddrAddData,pageTitle)" style="font-size: 18px">+</button>
+    </div>
+    <table class="layui-hide" id="resource-msg"></table>
+</div>
+
+
+</body>
+<script>
+    var apiAddrGetData="/CoolVideoAdmin/api/[[${code}]]/[[${getApiName}]]"
+    var apiAddrRemoveData="/CoolVideoAdmin/api/[[${code}]]/[[${removeApiName}]]"
+    var apiAddrAddData="/CoolVideoAdmin/index/[[${code}]]/[[${addApiName}]]"
+    var apiUploadData="/CoolVideoAdmin/api/[[${code}]]/[[${updateApiName}]]"
+    var pageTitle="[[${addTitle}]]"
+    loadData(apiAddrGetData)
+</script>
+<script th:src="@{${dataScript}}"></script>
+</html>

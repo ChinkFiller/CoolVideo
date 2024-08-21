@@ -1,0 +1,109 @@
+{
+	"pages": [ //pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
+		{
+			"path": "pages/index/index",
+			"style": {
+				"enablePullDownRefresh": false,
+				"navigationStyle": "custom",
+				"app-plus": {
+					"bounce": "none"
+				}
+			}
+		},
+		{
+			"path" : "pages/v_player/v_player",
+			"style" : 
+			{
+				"enablePullDownRefresh": false,
+				"navigationStyle": "custom",
+				"app-plus": {
+					"bounce": "none",
+					"subNVues": [
+						{
+							"id": "player",
+							"path": "pages/v_player/player",
+							"style": {
+								"position":"static",
+								"width": "100%",
+								"height": "300px"
+							}
+						}
+					]
+				}
+			}
+		},
+		{
+			"path" : "pages/search_res/search_res",
+			"style" : 
+			{
+				"enablePullDownRefresh": false,
+				"navigationStyle": "custom",
+				"app-plus": {
+					"bounce": "none"
+				}
+			}
+		},
+		{
+			"path" : "pages/notice/notice",
+			"style" : 
+			{
+				"enablePullDownRefresh": false,
+				"navigationStyle": "custom",
+				"app-plus": {
+					"bounce": "none"
+				}
+			}
+		},
+		{
+			"path" : "pages/history/history",
+			"style" : 
+			{
+				"enablePullDownRefresh": false,
+				"navigationStyle": "custom",
+				"app-plus": {
+					"bounce": "none"
+				}
+			}
+		},
+		{
+			"path" : "pages/login/login",
+			"style" : 
+			{
+				"enablePullDownRefresh": false,
+				"navigationStyle": "custom",
+				"app-plus": {
+					"bounce": "none"
+				}
+			}
+		},
+		{
+			"path" : "pages/person/person",
+			"style" : 
+			{
+				"navigationStyle": "custom",
+				"app-plus": {
+					"bounce": "none"
+				}
+			}
+		},
+		{
+			"path" : "pages/setting/setting",
+			"style" : 
+			{
+				"navigationBarTitleText" : "",
+				"enablePullDownRefresh" : false,
+				"navigationStyle": "custom",
+				"app-plus": {
+					"bounce": "none"
+				}
+			}
+		}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "black",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#F8F8F8",
+		"backgroundColor": "#F8F8F8"
+	},
+	"uniIdRouter": {}
+}

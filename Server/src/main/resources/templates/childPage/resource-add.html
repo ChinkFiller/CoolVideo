@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/static/layui/layui.js"></script>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <script src="/static/utils/tools.js"></script>
+    <style>
+        .app{
+            margin-top: 55px;
+            width: 90%;
+            margin-right: 5%;
+            margin-left: 5%;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <form class="layui-form">
+            <div class="layui-form-item">
+                <label class="layui-form-label">视频名称</label>
+                <div class="layui-input-block">
+                    <input type="text" name="name" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">更新状态</label>
+                <div class="layui-input-block">
+                    <input type="text" name="state" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">导演</label>
+                <div class="layui-input-block">
+                    <input type="text" name="leader" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">演员</label>
+                <div class="layui-input-block">
+                    <input type="text" name="actor" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">封面地址</label>
+                <div class="layui-input-block">
+                    <input type="text" name="img_url" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <div class="layui-input-block">
+                    <button type="submit" class="layui-btn" lay-submit lay-filter="demo1">立即提交</button>
+                    <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+</body>
+
+<script>
+    var apiUpload="/CoolVideoAdmin/api/[[${code}]]/[[${updateApiName}]]"
+</script>
+</html>

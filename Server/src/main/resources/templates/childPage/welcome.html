@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="/static/layui/layui.js"></script>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+	<script src="/static/utils/tools.js"></script>
+    <link href="/static/main/controls.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+		<div class="layui-panel" style="margin-top: 15px">
+			<p style="padding: 20px;font-size:18px;">服务器运行总览</p>
+		</div>
+		<div class="main-cotroller">
+			<div class="one-msg">
+				<div class="myprogress" id="cpuprogress"></div>
+				<div class="main-data">
+					<p id="maincpumsg">NaN%</p>
+					<p style="font-size: 18px;">CPU</p> 
+				</div>
+			</div>
+			<div class="one-msg">
+				<div class="myprogress" id="memoryprogress"></div>
+				<div class="main-data">
+					<p id="mainmemorymsg">NaN%</p>
+					<p style="font-size: 18px;">内存</p> 
+				</div>
+			</div>
+			<div class="one-msg">
+				<div class="myprogress" id="storageprogress"></div>
+				<div class="main-data">
+					<p id="mainstoragemsg">NaN%</p>
+					<p style="font-size: 18px;">储存</p> 
+				</div>
+			</div>
+		</div>
+		<div class="layui-panel" style="padding:15px;margin-bottom: 15px">
+			<div style="display: flex">
+				<div style="margin-top: 10px">
+					爬虫状态:
+					<span id="autoGetterState">---</span>
+				</div>
+				<button type="button" class="layui-btn layui-btn-disabled layui-btn-radius" style="margin-left: auto;margin-right: 20px;" id="bootBtn" onclick="getterSetter()" disabled="disabled">启动</button>
+			</div>
+			<div style="margin-top: 15px;height: 150px;width: 100%;overflow: auto;background-color: #1f1f1f" id="logView">
+				<pre class="layui-code code-demo" style="" lay-options="{theme: 'dark'}" id="logs">未在运行....</pre>
+			</div>
+		</div>
+		<div class="layui-panel" style="padding: 15px;margin-bottom: 25px">
+			<div style="display: flex;width: 100%;flex-wrap: wrap">
+				<p style="width: 50%;margin-top: 10px;margin-bottom: 10px">服务器系统:<span th:text="${sysType}">V1.26</span></p>
+				<p style="width: 50%;margin-top: 10px;margin-bottom: 10px">访问限制:<span th:text="${speedLimit}"></span></p>
+				<p style="width: 50%;margin-top: 10px;margin-bottom: 10px">服务器开启端口:<span th:text="${port}">9008</span></p>
+				<p style="width: 50%;margin-top: 10px;margin-bottom: 10px">数据库类型:<span th:text="${databasetype}">mysql</span></p>
+				<p style="width: 50%;margin-top: 10px;margin-bottom: 10px">数据库地址:<span th:text="${databaseaddr}">127.0.0.1:3306</span></p>
+				<p style="width: 50%;margin-top: 10px;margin-bottom: 10px">邮箱地址:<span th:text="${emailaddr}">1577615767@qq.com</span></p>
+				<p style="width: 50%;margin-top: 10px;margin-bottom: 10px">服务端版本:<span th:text="${version}">V1.26</span></p>
+			</div>
+		</div>
+		<div>&nbsp;</div>
+    </div>
+</body>
+
+
+<script>
+	var nowOption='boot'
+	var nowLogNums=0
+	var logText=''
+	ajaxEvent()
+	setInterval(()=>{
+		ajaxEvent()
+	},3500)
+	function disabledbtn(state){
+		if (state){
+			document.getElementById("bootBtn").className="layui-btn layui-btn-disabled layui-btn-radius"
+			document.getElementById("bootBtn").disabled = true
+		}else{
+			document.getElementById("bootBtn").className="layui-btn layui-btn-primary layui-btn-radius"
+			document.getElementById("bootBtn").disabled = false
+		}
+	}
+	function getterSetter(){
+		ajax("/CoolVideoAdmin/api/[[${code}]]/getter","GET",{id:nowOption},{},(res)=>{
+			if (!res.error){
+				layui.layer.msg("执行成功")
+				ajaxEvent()
+			}else {
+				layui.layer.msg("执行失败")
+				ajaxEvent()
+			}
+		})
+	}
+	function ajaxEvent(){
+		ajax("/CoolVideoAdmin/api/[[${code}]]/sysState","GET",{},{},(data)=>{
+			if (!data.error){
+				document.getElementById("maincpumsg").innerText=data.data.cpu+"%"
+				document.getElementById("cpuprogress").style.transform=`translateY(-${data.data.cpu}%)`
+				document.getElementById("mainmemorymsg").innerText=data.data.memory+"%"
+				document.getElementById("memoryprogress").style.transform=`translateY(-${data.data.memory}%)`
+				document.getElementById("mainstoragemsg").innerText=data.data.storage+"%"
+				document.getElementById("storageprogress").style.transform=`translateY(-${data.data.storage}%)`
+				if (nowLogNums!==data.data.getterLogs.length){
+					logText=''
+					for (var i=0;i<data.data.getterLogs.length;i++){
+						logText+=data.data.getterLogs[i]+"\n"
+						layui.use(function(){
+							layui.code({
+								elem: '.code-demo',
+								code:logText.substring(0,logText.length-1),
+								highlighter:'hljs'
+							});
+						})
+					}
+					nowLogNums=data.data.getterLogs.length
+					document.getElementById("logView").scrollTop=document.getElementById('logs').scrollHeight
+				}
+				switch (data.data.autoGetter){
+					case "terminated":
+						document.getElementById("autoGetterState").innerHTML="<text style='color: #7e0101'>已停止</text>"
+						nowOption='boot'
+						document.getElementById("bootBtn").innerText="启动"
+						disabledbtn(false)
+						break;
+					case "running":
+						document.getElementById("autoGetterState").innerHTML="<text style='color: #039103'>正在运行</text>"
+						nowOption='stop'
+						document.getElementById("bootBtn").innerText="停止"
+						disabledbtn(false)
+						break;
+					case "booting":
+						document.getElementById("autoGetterState").innerHTML="<text style='color: #02d202'>正在启动</text>"
+						nowOption='stop'
+						document.getElementById("bootBtn").innerText="停止"
+						disabledbtn(true)
+						break;
+					case "retrying":
+						document.getElementById("autoGetterState").innerHTML="<text style='color: #fcde4b'>出错重试</text>"
+						nowOption='stop'
+						document.getElementById("bootBtn").innerText="停止"
+						disabledbtn(false)
+						break;
+					case "stopping":
+						document.getElementById("autoGetterState").innerHTML="<text style='color: #fa0e0e'>停止中</text>"
+						document.getElementById("bootBtn").innerText="停止"
+						disabledbtn(true)
+				}
+			}else{
+				layui.layer.msg(data.msg)
+			}
+		})
+	}
+	layui.use(function(){
+		layui.code({
+			elem: '.code-demo',
+			code:"程序未运行..."
+		});
+	})
+</script>
+</html>

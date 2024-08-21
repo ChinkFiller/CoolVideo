@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--<mapper namespace="com.example.web.mapper.UserMapper">-->
+    <mapper namespace="com.test.http_spring.mapper.filmMapper">
+
+    <select id="findAllFilm" resultType="com.test.http_spring.pojo.film_data">
+        select * FROM film_data;
+    </select>
+
+
+    <select id="findFilmLikeByName" parameterType="String" resultType="com.test.http_spring.pojo.film_data">
+        select * from film_data where name like '%${info}%';
+    </select>
+    <select id="findFilmDataById" parameterType="int" resultType="com.test.http_spring.pojo.film_data">
+        select * from film_data where id=#{id};
+    </select>
+
+    <update id="addOneFilmAgree" parameterType="int">
+        update film_data set agree=agree+1 where id=#{id};
+    </update>
+    <update id="removeOneFilmAgree" parameterType="int">
+        UPDATE film_data
+        SET agree = CASE
+        WHEN agree > 0 THEN agree - 1
+        ELSE 0
+        END
+        WHERE id=#{id};
+    </update>
+    <delete id="removeOneFilm" parameterType="int">
+        delete from film_data where id=#{id};
+    </delete>
+    <insert id="addOneFilm" parameterType="com.test.http_spring.pojo.film_data">
+        insert into film_data(name,state,leader,actor,img_url,agree,danmu) values ('${name}','${state}','${leader}','${actor}','${img_url}',0,'{}')
+    </insert>
+    <update id="updateData" parameterType="com.test.http_spring.pojo.film_data">
+        update film_data set name='${name}',state='${state}',leader='${leader}',actor='${actor}',img_url='${img_url}' where id=#{id};
+    </update>
+    <select id="getDanmu" resultType="String" parameterType="int">
+        select danmu from film_data where id=#{id}
+    </select>
+    <update id="setDanmu">
+        update film_data
+        set danmu = '${data}'
+        where id=#{id};
+    </update>
+</mapper>

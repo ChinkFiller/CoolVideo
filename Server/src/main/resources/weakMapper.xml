@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.test.http_spring.mapper.WeekMapper">
+
+    
+    <select id="findAllWeekData" parameterType="String" resultType="com.test.http_spring.pojo.film_data">
+        SELECT * from film_data as data INNER JOIN week as wk on wk.week=${date} WHERE wk.id=data.id;
+    </select>
+    <select id="findAllWeekDataNoDay" resultType="com.test.http_spring.pojo.weak">
+        SELECT * FROM week;
+    </select>
+</mapper>

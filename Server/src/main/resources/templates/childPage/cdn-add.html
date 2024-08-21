@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/static/layui/layui.js"></script>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <script src="/static/utils/tools.js"></script>
+    <style>
+        .app{
+            margin-top: 55px;
+            width: 90%;
+            margin-right: 5%;
+            margin-left: 5%;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <form class="layui-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label">视频ID</label>
+            <div class="layui-input-block">
+                <input type="number" name="id" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">选集</label>
+            <div class="layui-input-block">
+                <input type="number" name="part" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <input type="file" lay-verify="required" accept="video/mp4" id="fileData">
+            </div>
+        </div>
+        <div class="layui-form-item" id="box-progress" style="display: none">
+            <div class="layui-progress layui-progress-big" lay-showpercent="true" lay-filter="myprogress" style="width: 85%;margin-left: 15%">
+                <div class="layui-progress-bar" lay-percent="0%"></div>
+            </div>
+        </div>
+        <div class="layui-form-item" id="box-update">
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn" lay-submit lay-filter="demo1">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+</body>
+
+<script>
+    layui.form.on('submit(demo1)', function(data){
+        const id=data.field.id
+        let target=''
+        let part=''
+        for (var i in alldata){
+            if (parseInt(id)===alldata[i].id){
+                target=id
+                part=alldata[i].state
+                break;
+            }
+        }
+        if (target===''){
+            setTimeout(()=>{
+                layui.layer.msg('视频信息未录入，请先前往视频资源管理添加数据')
+            },100)
+            return false;
+        }
+        if (getNumber(part)<parseInt(data.field.part)){
+            setTimeout(()=>{
+                layui.layer.msg(`选集超出`)
+            },100)
+            return false;
+        }
+        document.getElementById('box-update').style.display='none'
+        document.getElementById('box-progress').style.display='block'
+        const file=document.getElementById('fileData').files[0];
+        uploadFile(file,"/CoolVideoAdmin/file/[[${code}]]/addCdnFile",data.field,(res)=>{
+            if(!res.error){
+                window.parent.finishUpload(true);
+            }else{
+                window.parent.finishUpload(false);
+            }
+        },(pro)=>{
+            layui.element.progress('myprogress',`${parseInt(pro)}%`)
+        })
+        return false;
+    });
+</script>
+
+<script>
+    var alldata=[]
+    addEventListener('load',()=>{
+        ajax("/CoolVideoAdmin/api/[[${code}]]/getAllVideo","GET",{},{},(res)=>{
+            if (!res.error){
+                alldata=res.data
+            }else{
+                layui.msg("获取数据失败，请检查网络后重试")
+            }
+        })
+    })
+    function getNumber(str){
+        const numbers = str.match(/\d+/g);
+        return numbers ? numbers.join(', ') : 1;
+    }
+</script>
+</html>

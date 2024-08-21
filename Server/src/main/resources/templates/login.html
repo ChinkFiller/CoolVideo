@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CoolVideo后台登录</title>
+    <link rel="shortcut icon" href="/static/login/index_logo.ico" >
+    <link rel="stylesheet" type="text/css" href="/static/login/style.css">
+    <script src="/static/login/notice.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="login-wrapper">
+            <div class="header">CoolVideo后台登录</div>
+            <div class="form-wrapper">
+                <div class="input-data">
+				<input type="text" required="" class="input-item" id="name" onkeydown="userEnterKey()"/>
+				<div class="underline" id="userline"></div>
+				<label>账号</label>
+			</div>
+            </div>
+                <br>
+                <div class="input-data">
+                    <input required="" type="password" class="input-item" id="passwd" onkeydown="passEnterKey()"/>
+                    <div class="underline" id="passline"></div>
+				<label>密码</label>
+                </div>
+            <div>
+            <div class="box">
+              <button class="btn" id="loginBtn">登录</button>
+            </div>
+            </div>
+        </div>
+    </div>
+<script tpye="text/javascript" src="/static/login/test.js"></script>
+</body>
+</html>

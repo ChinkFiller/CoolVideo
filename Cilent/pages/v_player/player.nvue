@@ -1,0 +1,441 @@
+<template>
+	<div style="width: 100%;height: 35px;position: relative;background-color: black;" v-if="!getFullScreenState()"></div>
+	<div>
+		<video id="myVideo" ref="myVideo" :src="video" controls="false" autoplay="true" @timeupdate="videoTimeUpdate" @ended="pauseOrPlayVideo()" :style="{height:`${originVideoHeigh}px`}" enable-danmu="true" :danmu-list="danmuList"></video>
+	</div>
+	<div class="controls" :style="{width:`${width}px`}" @touchstart="start" @touchend="end" @touchmove="move" @longpress="speed()">
+		<div class="speed_icon" v-if="isSpeeding">
+			<div class="text_bar">
+				<text style="color: white;">2倍速播放中>>></text>
+			</div>
+		</div>
+		<div class="speed_icon" v-if="isChangeVolume">
+			<div class="text_bar">
+				<text style="color: white;">音量:{{newVolum}}%</text>
+			</div>
+		</div>
+		<div class="speed_icon" v-if="isChangeLighte">
+			<div class="text_bar">
+				<text style="color: white;">亮度:{{newLight}}%</text>
+			</div>
+		</div>
+		<div class="speed_icon" v-if="isJunmPing">
+			<div class="text_bar">
+				<text style="color: white;">{{formateTimeFromNumber(nowVideoPosition)}}/{{formateTimeFromNumber(fullVideTIme)}}</text>
+			</div>
+		</div>
+	</div>
+	<div class="control-bar" :style="{width:`${width}px`,transform:`translateY(${controlIsShow*40}px)`}" v-if="isFullScreen">
+		<image :src="controlIcon" style="width: 30px;height: 30px;margin-top: 5px;margin-left: 15px;margin-right: 15px;" @click="pauseOrPlayVideo()"/>
+		<slider @change="jumpToPosition" @changing="stopAutoUpdate" :value="nowVideoPosition" :max="fullVideTIme" block-color="#00aaff" block-size="15" active-color="#ff007f"  style="margin-top: 10px;"/>
+		<text style="color: white;margin-top:8px;font-size: 20px;">{{formateTimeFromNumber(nowVideoPosition)}}/{{formateTimeFromNumber(fullVideTIme)}}</text>
+		<text style="color: white;margin-top: 8px;margin-right: 10px;margin-left: 10px;font-size: 20px;" @click="showSpeedOption()">倍速</text>
+		<image style="margin-top: 5px;margin-right: 15px;margin-left: 15px;width: 30px;height: 30px;" @click="fullScreen()" src="../../static/suoxiao.png"></image>
+	</div>
+	<div class="control-bar" :style="{width:`${width}px`,transform:`translateY(${controlIsShow*40}px)`}" v-else>
+		<image :src="controlIcon" style="width: 30px;height: 30px;margin-top: 5px;margin-left: 5px;margin-right: 5px;" @click="pauseOrPlayVideo()"/>
+		<slider @change="jumpToPosition" @changing="stopAutoUpdate" :value="nowVideoPosition" :max="fullVideTIme" block-color="#00aaff" block-size="15" active-color="#ff007f"  style="margin-top: 12.5px;"/>
+		<text style="color: white;margin-top:12.5px;font-size: 15px;">{{formateTimeFromNumber(nowVideoPosition)}}/{{formateTimeFromNumber(fullVideTIme)}}</text>
+		<image style="margin-top: 5px;margin-right: 5px;margin-left: 5px;width: 30px;height: 30px;" @click="fullScreen()" src="../../static/fullscreen.png"></image>
+	</div>
+	<div class="top_title_bar" :style="{width:`${width}px`,transform:`translateY(${-controlIsShow*65}px)`}">
+		<text style="color: white;margin-top: 40px;margin-left: 15px;overflow: hidden;white-space: nowrap;" :style="{width:`${width}px`}">{{videoTitle}}</text>
+	</div>
+	<div class="right-option-bar" :style="{width:`${width*0.3}px`,transform:`translateX(${!isRightBarShow*width*0.3}px)`,height:`${height}px`}">
+		<div :style="{height: `${(height-136)/2}px`}"></div>
+		<text :style="{width:`${width*0.3}px`}" style="text-align: center;font-size: 18px;margin-top: 8px;margin-bottom: 8px;color: red;" v-if="nowVideoSpeed==0.5">0.5</text>
+		<text :style="{width:`${width*0.3}px`}" style="text-align: center;font-size: 18px;margin-top: 8px;margin-bottom: 8px;color: white;" v-else @click="changeSpeed(0.5)">0.5</text>
+		<text :style="{width:`${width*0.3}px`}" style="text-align: center;font-size: 18px;margin-top: 8px;margin-bottom: 8px;color: red;" v-if="nowVideoSpeed==1">1.0</text>
+		<text :style="{width:`${width*0.3}px`}" style="text-align: center;font-size: 18px;margin-top: 8px;margin-bottom: 8px;color: white;" v-else @click="changeSpeed(1)">1.0</text>
+		<text :style="{width:`${width*0.3}px`}" style="text-align: center;font-size: 18px;margin-top: 8px;margin-bottom: 8px;color: red;" v-if="nowVideoSpeed==1.5">1.5</text>
+		<text :style="{width:`${width*0.3}px`}" style="text-align: center;font-size: 18px;margin-top: 8px;margin-bottom: 8px;color: white;" v-else @click="changeSpeed(1.5)">1.5</text>
+		<text :style="{width:`${width*0.3}px`}" style="text-align: center;font-size: 18px;margin-top: 8px;margin-bottom: 8px;color: red;" v-if="nowVideoSpeed==2.0">2.0</text>
+		<text :style="{width:`${width*0.3}px`}" style="text-align: center;font-size: 18px;margin-top: 8px;margin-bottom: 8px;color: white;" v-else @click="changeSpeed(2)">2.0</text>
+	</div>
+	<!-- 顶部遮挡层 -->
+	<div style="width: 100%;height: 35px;position: absolute;background-color: black;top: 0px;" :style="{width:`${width}px`}" v-if="!getFullScreenState()"></div>
+	
+</template>
+
+<script>
+import ajax from '../../common/ajax'
+	export default {
+		data(){
+			return{
+				video:"",
+				width:0,//宽度
+				touchNum:0,//触发按下事件的次数
+				IsPlaying:true,//是否正在播放 
+				isSpeeding:false,//是否在临时倍速播放，长按倍速事件
+				nowVideoPosition:0,//视频当前的位置
+				fullVideTIme:0,//时评总时长
+				controlIcon:"../../static/pauseicon.png",//暂停播放按钮的图标位置
+				isChangeing:false,//是否正在改变进度，正在改变的话会暂停视频进度自动更新器
+				isRightBarShow:0,//右侧的控制倍速的菜单是否显示，0是不显示，1是显示
+				controlIsShow:0,//是否显示控制栏，比较特殊，0是显示，1是不显示
+				controlsTimer:null,//自动隐藏控制栏的计时器
+				firstTouchePositionX:0,
+				firstTouchePositionY:0,
+				nowVideoSpeed:1,//现在视频的倍率
+				isFullScreen:false,//是否全屏
+				originVideoHeigh:265,//原始的视频组件的高度
+				videoTitle:"",//视频的标题
+				height:300,//播放器高度
+				tourStartTime:0,//触发触碰屏幕的时间戳
+				isJudgedTouchDirection:false,//是否判断了滑动方向
+				originWidth:0,//原始的屏幕宽度，调用系统的api在翻转屏幕时会有bug
+				originPlayPostion:0,//未调整前视频的进度位置
+				TouchDirection:0,//1为上下，2为左右，0为未判断
+				originVolum:0,//未调整前音量的大小
+				originLight:0,
+				isJunmPing:false,
+				isChangeVolume:false,
+				isChangeLighte:false,
+				newVolum:0,
+				newLight:0,
+				danmuList:[],
+			}
+		},
+		onLoad() {
+			//全局事件注册
+			uni.$on("play",res=>{
+				this.nowVideoPosition=0
+				this.fullVideTIme=0
+				this.videoTitle=res.title
+				ajax.do_request("/getdanmu","GET",{id:res.id,part:res.part},(back)=>{
+					if(!back.error){
+						this.danmuList=back.data
+						console.log("加载弹幕成功")
+						setTimeout(()=>{
+							this.video=res.url
+						},200)
+					}else{
+						this.video=res.url
+						uni.showToast({
+							title:"加载弹幕失败",
+							icon:"error"
+						})
+					}
+				})
+			})
+			uni.$on("backOrsize",res=>{//播放器还原屏幕大小触发函数
+				this.isRightBarShow=0
+				if (getApp().globalData.isPlayerFullScreen=true){
+					this.originVideoHeigh=265
+					uni.getSystemInfo({
+					success:(res)=>{
+						this.isFullScreen=false
+						this.height=300
+						getApp().globalData.isPlayerFullScreen=false
+						this.width=this.originWidth
+						}
+					})
+					
+				}
+			})
+			uni.$on("sendDanmu",res=>{
+				this.sendOneDanmu(res.value,res.id,res.part,res.color)
+			})
+			uni.$on("pauseVideo",res=>{//播放器强制暂停触发器
+				try{
+					this.$refs.myVideo.pause()
+				}catch(err){
+					console.log(err)
+				}
+			})
+			uni.getSystemInfo({
+				success:(res)=>{
+					this.width=res.windowWidth
+					this.originWidth=this.width
+				}
+			})
+			this.controlsTimer=setTimeout(()=>{
+				this.controlIsShow=1
+			},5000)
+		},
+		onUnload() {
+			console.log("页面关闭了")
+		},
+		methods:{
+			start(e){
+				this.firstTouchePositionX=e.changedTouches[0].screenX
+				this.firstTouchePositionY=e.changedTouches[0].screenY
+				this.tourStartTime=new Date().getTime();
+				this.TouchDirection=0
+				this.isJudgedTouchDirection=false
+			},
+			pauseOrPlayVideo(){
+				if (this.isPlaying){
+					this.$refs.myVideo.pause()
+					this.isPlaying=false
+					this.controlIcon="../../static/playicon.png"
+				}else{
+					this.$refs.myVideo.play()
+					this.isPlaying=true
+					this.controlIcon="../../static/pauseicon.png" 
+				}
+			},
+			end(e){
+				this.touchNum ++;
+				this.isChangeing=false//取消暂停更新状态
+				this.isChangeLighte=false
+				this.isChangeVolume=false
+				this.isJunmPing=false
+				if (this.isJudgedTouchDirection && this.TouchDirection==2){
+					this.$refs.myVideo.seek(this.nowVideoPosition)
+				}
+				setTimeout(()=>{
+					if(this.touchNum == 1){
+						this.isRightBarShow=0
+						clearTimeout(this.controlsTimer)
+						if (this.controlIsShow==0){
+							this.controlIsShow=1
+						}else{
+							this.controlIsShow=0
+							this.controlsTimer=setTimeout(()=>{
+								this.controlIsShow=1
+							},5000)
+						}
+					}
+					if(this.touchNum >= 2){
+						this.pauseOrPlayVideo()
+					}
+					this.touchNum = 0
+				},250)
+				if (this.isSpeeding){
+					this.$refs.myVideo.playbackRate(this.nowVideoSpeed)
+					this.isSpeeding=false
+				}
+			},
+			move(e){//触摸滑动事件函数
+				//console.log(new Date().getTime()-this.tourStartTime)
+				if (!this.isJudgedTouchDirection){
+					if (new Date().getTime()-this.tourStartTime>40){//在40ms时间内，判断哪个方向的绝对值大于了50，就可以判断是那个方向的滑动事件
+						if (Math.abs(this.firstTouchePositionX-e.changedTouches[0].screenX)>50){
+							//console.log("左右滑动")
+							this.isJudgedTouchDirection=true
+							this.TouchDirection=2
+							clearTimeout(this.controlsTimer)
+							this.controlIsShow=0//显示下方的控制条
+							this.isChangeing=true//正在跳转中,停止更新进度
+							this.originPlayPostion=this.nowVideoPosition
+						}else{
+							if (Math.abs(this.firstTouchePositionY-e.changedTouches[0].screenY)>50){
+								//console.log("上下滑动")
+								this.TouchDirection=1
+								this.isJudgedTouchDirection=true
+								this.originVolum=plus.device.getVolume()
+								uni.getScreenBrightness({
+									success:(res)=>{
+										this.originLight=res.value
+									}
+								})
+							}
+						}
+					}
+				}else{
+					if (this.TouchDirection==2){//左右滑动事件
+					    this.isJunmPing=true
+						let newPosition=parseInt(this.originPlayPostion)+parseInt(this.fullVideTIme*0.2*((e.changedTouches[0].screenX-this.firstTouchePositionX)/this.width))//实时计算跳转的距离
+					    if (!(newPosition<0 || newPosition>this.fullVideTIme)){
+							this.nowVideoPosition=newPosition
+						}else{
+							if (newPosition<0){
+								this.nowVideoPosition=0
+							}else{
+								this.nowVideoPosition=this.fullVideTIme
+							}
+						}
+					}
+					if (this.TouchDirection==1){
+						if (this.firstTouchePositionX>=this.width*0.5){
+							let newLight=this.originLight+(this.firstTouchePositionY-e.changedTouches[0].screenY)/(this.height*0.6)
+							if (!(newLight>=1 || newLight<=0)){
+								this.isChangeLighte=true
+								uni.setScreenBrightness({
+									value:newLight
+								})
+								this.newLight=parseInt(newLight*100)
+								//console.log("修改亮度",newLight)
+							}else{
+								this.isChangeLighte=true
+								if (newLight<0){
+									this.newLight=0
+								}else{
+									this.newLight=100
+								}
+							}
+						}else{
+							let newVolum=this.originVolum+(this.firstTouchePositionY-e.changedTouches[0].screenY)/(this.height*0.6)
+							if (!(newVolum>=1 || newVolum<=0)){
+								this.isChangeVolume=true
+								plus.device.setVolume(newVolum.toFixed(1))
+								this.newVolum=parseInt(newVolum*100)
+								//console.log("修改音量",newVolum.toFixed(1))
+							}else{
+								this.isChangeVolume=true
+								if (newVolum<0){
+									this.newVolum=0
+								}else{
+									this.newVolum=100
+								}
+							}
+						}
+					}
+				}
+				
+			},
+			speed(){
+				uni.vibrateShort({});//震动提示，提示已开启倍速
+				if (!this.isPlaying){
+					this.$refs.myVideo.play()
+					this.isPlaying=true
+					this.controlIcon="../../static/pauseicon.png"
+				}
+				this.controlIsShow=1
+				this.isSpeeding=true
+				this.$refs.myVideo.playbackRate(2)
+			},
+			videoTimeUpdate(e){
+				if (!this.isChangeing){
+					this.nowVideoPosition=e.detail.currentTime
+					this.fullVideTIme=e.detail.duration;
+				}
+			},
+			formateTimeFromNumber(time){
+				var min=parseInt(time/60);
+				var sec=parseInt(time)%60;
+				if (min<10){
+					min=`0${min}`
+				}
+				if (sec<10){
+					sec=`0${sec}`
+				}
+				return `${min}:${sec}`;
+			},
+			jumpToPosition(e){
+				this.$refs.myVideo.seek(e.detail.value)
+				this.isChangeing=false
+				if (!this.isPlaying){
+					this.$refs.myVideo.play()
+					this.isPlaying=true
+					this.controlIcon="../../static/pauseicon.png"
+				}
+				this.controlsTimer=setTimeout(()=>{
+					this.controlIsShow=1
+				},5000)
+			},
+			stopAutoUpdate(e){
+				this.isChangeing=true
+				this.nowVideoPosition=e.detail.value
+				clearTimeout(this.controlsTimer)
+			},
+			changeSpeed(speed){
+				this.nowVideoSpeed=speed
+				this.$refs.myVideo.playbackRate(speed)
+				this.isRightBarShow=0
+			},
+			fullScreen(){
+				if (!this.getFullScreenState()){
+					getApp().globalData.isPlayerFullScreen=true
+					this.isFullScreen=true
+					uni.$emit('fullscreen',{})
+					uni.getSystemInfo({
+					success:(res)=>{
+						this.width=res.windowHeight
+						this.originVideoHeigh=res.windowWidth
+						this.height=res.windowWidth
+					}
+					})
+				}else{
+					uni.$emit("backToOrPage",{})
+					uni.$emit("backOrsize",{})
+				}
+			},
+			getFullScreenState(){
+				if (getApp().globalData.isPlayerFullScreen){
+					return true
+				}else{
+					return false
+				}
+			},
+			showSpeedOption(){
+				if (this.isRightBarShow){
+					this.isRightBarShow=0
+				}else{
+					this.isRightBarShow=1
+				}
+			},
+			sendOneDanmu(text,id,part,color){
+				try{
+					const time=parseInt(this.nowVideoPosition)
+					if (time==0){
+						return;
+					}
+					ajax.do_request("/setdanmu","POST",{id:id,text:text,time:time,part:part,color:color},(res)=>{
+						if (!res.error){
+							this.$refs.myVideo.sendDanmu({
+								text: text,
+								color: color
+							})
+							console.log('发送成功')
+						}else{
+							uni.showToast({
+								title:"发送失败",
+								icon:'error'
+							})
+						}
+					})
+				}catch(err){
+					
+				}
+			},
+		}
+	}
+</script>
+
+<style>
+	.controls{
+		position: absolute;
+		top: 35px;
+		z-index: 1;
+		height: 265px;
+	}
+	.controls .speed_icon{
+		position: relative;
+		top: 30px;
+		flex-direction: row;
+		justify-content: center;
+	}
+	.text_bar{
+		background: rgba(0, 0, 0, 0.45);
+		padding: 5px;
+		border-radius: 5px;
+	}
+	.control-bar{
+		position: absolute;
+		height: 40px;
+		bottom: 0px;
+		background: linear-gradient(to bottom,rgba(255,255,255,0),rgba(0,0,0,0.8));
+		flex-direction: row;
+		transition: transform 0.1s;
+	}
+	.top_title_bar{
+		position: absolute;
+		top:0px;
+		height: 65px;
+		background: linear-gradient(to top,rgba(0,0,0,0),rgba(0,0,0,0.8));
+		transition: transform 0.1s;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.right-option-bar{
+		position: absolute;
+		top: 0px;
+		right: 0px;
+		background-color: rgba(0,0,0,0.85);
+		transition: transform 0.3s;
+		z-index: 3;
+	}
+</style>

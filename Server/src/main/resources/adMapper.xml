@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.test.http_spring.mapper.adMapper">
+    <select id="getAllBannerAd" resultType="com.test.http_spring.pojo.Banner">
+        SELECT * FROM banner as b LEFT JOIN film_data as film ON b.id=film.id;
+    </select>
+    <select id="getAllFastFunctionSetting" resultType="com.test.http_spring.pojo.FastFunction">
+        select * from fast_functions;
+    </select>
+    <delete id="removeBanner" parameterType="int">
+        delete from banner where bid=#{bid};
+    </delete>
+    <insert id="addBanner" parameterType="com.test.http_spring.pojo.Banner">
+        insert into banner(type,img,url,id,title) values ('${type}','${img}','${url}',#{id},'${title}')
+    </insert>
+    <update id="updateBanner" parameterType="com.test.http_spring.pojo.Banner">
+        update banner set type='${type}',img='${img}',url='${url}',id=#{id},title='${title}' where bid=#{bid};
+    </update>
+
+
+    <delete id="removeFastFunction" parameterType="int">
+        delete from fast_functions where fid=#{fid};
+    </delete>
+    <insert id="addFastFunction" parameterType="com.test.http_spring.pojo.FastFunction">
+        insert into fast_functions(title, href, img) values ('${title}','${href}','${img}')
+    </insert>
+    <update id="updateFastFunction" parameterType="com.test.http_spring.pojo.FastFunction">
+        update fast_functions set title='${title}',img='${img}',href='${href}' where fid=#{fid};
+    </update>
+</mapper>

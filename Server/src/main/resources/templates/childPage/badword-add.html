@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/static/layui/layui.js"></script>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <script src="/static/utils/tools.js"></script>
+    <style>
+        .app{
+            margin-top: 55px;
+            width: 90%;
+            margin-right: 5%;
+            margin-left: 5%;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <form class="layui-form">
+        <div class="layui-form-item">
+           <p style="text-align: center">输入评论弹幕拦截关键词，以','间隔</p>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">关键词</label>
+            <div class="layui-input-block">
+                <textarea name="badWords" placeholder="输入评论弹幕拦截关键词，以','间隔" class="layui-textarea" id="badword"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn" lay-submit lay-filter="demo1">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+</body>
+
+<script>
+    var apiUpload="/CoolVideoAdmin/api/[[${code}]]/[[${updateApiName}]]"
+</script>
+<script>
+    ajax("/CoolVideoAdmin/api/[[${code}]]/[[${getApiName}]]","GET",{},{},(res)=>{
+        if (!res.error){
+            document.getElementById('badword').innerText=res.data.join(',');
+        }else{
+            document.getElementById('badword').innerText=""
+        }
+    })
+</script>
+</html>

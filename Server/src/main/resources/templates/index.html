@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>CoolVideo服务器后台管理</title>
+    <script src="/static/layui/layui.js"></script>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <style>
+        body{
+            user-select: none;
+        }
+        iframe{
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border: none;
+            transition: all 1s;
+        }
+        @keyframes loadin{
+            0%{
+                transform: translateX(0px);
+                filter: opacity(100%);
+            }
+            40%{
+                transform: translateX(30%);
+                filter: opacity(0%);
+            }
+            60%{
+                transform: translateX(30%);
+                filter: opacity(0%);
+            }
+            100%{
+                transform: translateX(0px);
+                filter: opacity(100%);
+            }
+        }
+        .active{
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border: none;
+            animation-name: loadin;
+            animation-duration: 0.8s;
+            animation-iteration-count: 1;
+            animation-fill-mode: forwards;
+        }
+        .normal{
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border: none;
+            transform: translateX(0px);
+            transition: all 1s;
+        }
+    </style>
+    <style>
+
+    </style>
+</head>
+<body>
+<div class="layui-layout layui-layout-admin">
+    <div class="layui-header">
+        <div class="layui-logo layui-hide-xs layui-bg-black" id="leftBarTitle" style="transition: all 0.25s">
+            CoolVideo后台管理
+            <span class="layui-icon layui-icon-shrink-right" onclick="showOrHideLeftBar()" style="margin-left: 10%;cursor: pointer"></span>
+        </div>
+        <ul class="layui-nav layui-layout-right">
+            <li class="layui-nav-item layui-hide layui-show-sm-inline-block">
+                <a href="javascript:" id="username">
+                    <img class="layui-nav-img" id="userimg">
+                </a>
+                <dl class="layui-nav-child">
+                    <dd><a href="javascript:clearAllCookie();location.reload();">退出</a></dd>
+                </dl>
+            </li>
+        </ul>
+    </div>
+    <div class="layui-side layui-bg-black" id="leftBarMenu" style="transition:all 0.25s">
+        <div class="layui-side-scroll">
+            <ul class="layui-nav layui-nav-tree" lay-filter="test">
+                <li class="layui-nav-item">
+                    <a onclick="goTo('welcome')">首页</a>
+                </li>
+                <li class="layui-nav-item layui-nav-itemed">
+                    <a>资源管理</a>
+                    <dl class="layui-nav-child">
+                        <dd><a onclick="goTo('resource-control')">视频资源管理</a></dd>
+                        <dd><a onclick="goTo('user-control')">用户管理</a></dd>
+                        <dd><a onclick="goTo('banner-control')">Banner管理</a></dd>
+                        <dd><a onclick="goTo('fastfunction-control')">快速功能管理</a></dd>
+                        <dd><a onclick="goTo('danmu-control')">违规弹幕处理</a></dd>
+                    </dl>
+                </li>
+                <li class="layui-nav-item">
+                    <a onclick="goTo('cdn-control')">本地缓存管理管理</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="layui-body" style="transition: all 0.25s;padding-bottom: 0px;overflow: hidden" id="mainBody">
+        <iframe name="main_ui" id="display"></iframe>
+    </div>
+</div>
+</body>
+
+<script>
+    let leftBarHide=false
+    let nowPage=''
+    function clearAllCookie() {
+        document.cookie =  "token=;exdays=Thu, 01 Jan 1970 00:00:00 GMT;";
+        localStorage.clear();
+    }
+    addEventListener("load",()=>{
+        document.getElementById("userimg").src=JSON.parse(localStorage.getItem("userdata")).icon
+        document.getElementById("username").innerHTML+=JSON.parse(localStorage.getItem("userdata")).name
+        goTo("welcome")
+    })
+    function showOrHideLeftBar(){
+        var title=document.getElementById("leftBarTitle")
+        var barbody=document.getElementById("leftBarMenu")
+        var main=document.getElementById("mainBody")
+        if(leftBarHide){
+            title.style.transform="translateX(0%)"
+            barbody.style.transform="translateX(0%)"
+            leftBarHide=false
+            title.children[0].className="layui-icon layui-icon-shrink-right"
+            main.style.width=`${document.documentElement.clientWidth-200}px`
+            main.style.transform="translateX(0px)"
+        }else{
+            title.style.transform="translateX(-75%)"
+            barbody.style.transform="translateX(-100%)"
+            leftBarHide=true
+            title.children[0].className="layui-icon layui-icon-spread-left"
+            main.style.transform="translateX(-200px)"
+            main.style.width=`${document.documentElement.clientWidth}px`
+        }
+    }
+    addEventListener('resize',()=>{
+        var main=document.getElementById("mainBody")
+        if (leftBarHide){
+            main.style.width=`${document.documentElement.clientWidth}px`
+        }else {
+            main.style.width=`${document.documentElement.clientWidth-200}px`
+        }
+    })
+    addEventListener("animationend",()=>{
+        document.getElementById("display").className="normal"
+        isJumping=false
+    })
+
+    addEventListener("animationcancel",()=>{
+        document.getElementById("display").src = '/CoolVideoAdmin/index/[[${code}]]/'+nowPage
+        document.getElementById("display").className="active"
+    })
+
+
+    let isJumping=false
+    function goTo(url) {
+        if (nowPage===url){
+            return;
+        }
+        nowPage=url
+        if (isJumping){
+            document.getElementById("display").className="normal"
+        }else{
+            isJumping=true
+            document.getElementById("display").className="active"
+            setTimeout(()=>{
+                document.getElementById("display").src = '/CoolVideoAdmin/index/[[${code}]]/'+nowPage
+            },350)
+        }
+    }
+
+</script>
+</html>

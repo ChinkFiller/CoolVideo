@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--<mapper namespace="com.example.web.mapper.UserMapper">-->
+<mapper namespace="com.test.http_spring.mapper.BadMsgMapper">
+    <select id="findAllBadMsg">
+        select * from badmsg;
+    </select>
+    <insert id="writeOneMsg" parameterType="com.test.http_spring.pojo.BadMsg">
+        insert into badmsg(filmid, danmuid, user, time, content, type,banuser,part) values (#{filmid},#{danmuid},#{user},#{time},#{content},#{type},#{banuser},#{part})
+    </insert>
+    <update id="updateData" parameterType="com.test.http_spring.pojo.BadMsg">
+        UPDATE badmsg
+        SET time=#{time}, user=#{user}
+        WHERE filmid=#{filmid} AND danmuid=#{danmuid} and part=#{part};
+    </update>
+    <delete id="deleteOneDanmu" parameterType="int">
+        delete from badmsg where id=#{id}
+    </delete>
+    <select id="selectMsgById" parameterType="int">
+        select * from badmsg where id=#{id}
+    </select>
+    <select id="selectMsgByMsgs" parameterType="com.test.http_spring.pojo.BadMsg">
+        select * from badmsg where filmid=#{filmid} and danmuid=#{danmuid} and part=#{part}
+    </select>
+</mapper>

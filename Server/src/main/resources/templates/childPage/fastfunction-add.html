@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="/static/layui/layui.js"></script>
+    <link rel="stylesheet" href="/static/layui/css/layui.css">
+    <script src="/static/utils/tools.js"></script>
+    <style>
+        .app{
+            margin-top: 55px;
+            width: 90%;
+            margin-right: 5%;
+            margin-left: 5%;
+        }
+    </style>
+</head>
+<body>
+<div class="app">
+    <form class="layui-form">
+        <div class="layui-form-item">
+            <label class="layui-form-label">标题</label>
+            <div class="layui-input-block">
+                <input type="text" name="title" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">跳转链接</label>
+            <div class="layui-input-block">
+                <input type="text" name="href" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">网络图标</label>
+            <input type="checkbox" lay-skin="switch" lay-filter="switchTest" title="网络|本地">
+        </div>
+        <div id="box-select">
+            <div class="layui-form-item">
+                <label class="layui-form-label">图标</label>
+                <div class="layui-input-block">
+                    <select lay-verify="required" name="img">
+                        <option value="../../static/notice.png" selected>通知</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn" lay-submit lay-filter="demo1">立即提交</button>
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+</body>
+
+<script>
+    var apiUpload="/CoolVideoAdmin/api/[[${code}]]/[[${updateApiName}]]"
+    layui.form.on('switch(switchTest)',function (data){
+        if (this.checked){
+            document.getElementById("box-select").innerHTML='<div class="layui-form-item">\n' +
+                '                <label class="layui-form-label">图标</label>\n' +
+                '                <div class="layui-input-block">\n' +
+                '                    <input type="text" lay-verify="required" name="img" placeholder="请输入" autocomplete="off" class="layui-input">\n' +
+                '                </div>\n' +
+                '            </div>'
+        }else{
+            document.getElementById("box-select").innerHTML='<div class="layui-form-item">\n' +
+                '                <label class="layui-form-label">图标</label>\n' +
+                '                <div class="layui-input-block">\n' +
+                '                    <select lay-verify="required" name="img">\n' +
+                '                        <option value="../../static/notice.png" selected>通知</option>\n' +
+                '                    </select>\n' +
+                '                </div>\n' +
+                '            </div>'
+            layui.form.render()
+        }
+    })
+</script>
+</html>
