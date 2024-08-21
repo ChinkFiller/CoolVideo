@@ -7,6 +7,12 @@
 * 自动爬取全网资源，可自己部署服务器使用。
 * 支持外链播放和本地资源播放
 
+## App端截图
+<img src="Images/index.png" style="width: 24%">
+<img src="Images/player.png" style="width: 24%">
+<img src="Images/weeks.png" style="width: 24%">
+<img src="Images/drew.png" style="width: 24%">
+
 ## CoolVideo(库视频)有哪些功能？
 * 支持多种`媒体方式`
     *  可以快速把一个视频上传到服务器，让其他的用户观看
