@@ -1,0 +1,9 @@
+{
+    "id": "jdy-barrage",
+    "name": "nvue视频弹幕",
+    "version": "1.0.1",
+    "description": "用于nvue页面中video视频上弹幕显示",
+    "keywords": [
+        "nvue，视频弹幕，直播，播放器，视频"
+    ]
+}

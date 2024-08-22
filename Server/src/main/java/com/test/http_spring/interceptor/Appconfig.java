@@ -25,9 +25,9 @@ public class Appconfig implements WebMvcConfigurer {
         HandlerInterceptor interceptor=new Ipcheckhandle();
         //白名单
         List<String> patterns=new ArrayList<>();
-        patterns.add("/CoolVideoAdmin/index/"+GlobalValue.randomAdminPath+"/**");
-        patterns.add("/CoolVideoAdmin/api/"+GlobalValue.randomAdminPath+"/**");
-        registry.addInterceptor(interceptor).addPathPatterns("/**").excludePathPatterns(patterns);
+//        patterns.add("/CoolVideoAdmin/index/"+GlobalValue.randomAdminPath+"/**");
+//        patterns.add("/CoolVideoAdmin/api/"+GlobalValue.randomAdminPath+"/**");
+//        registry.addInterceptor(interceptor).addPathPatterns("/**").excludePathPatterns(patterns);
         ToolsFunction.infoLog("服务器已启动");
         ToolsFunction.infoLog("版本:"+ GlobalValue.version);
     }

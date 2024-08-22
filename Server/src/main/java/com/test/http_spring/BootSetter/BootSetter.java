@@ -51,7 +51,7 @@ public class BootSetter implements EnvironmentPostProcessor {
         newdata.put("spring.mail.default-encoding","UTF-8");
         newdata.put("spring.mail.properties.mail.smtp.socketFactoryClass","javax.net.ssl.SSLSocketFactory");
         //日志输出，为关闭所有的日志输出
-        newdata.put("logging.level.root","info");
+        newdata.put("logging.level.root","off");
         //配置mybaites的脚本位置
         newdata.put("mybatis.mapper-locations", "classpath*:*.xml");
         //配置初始化建表sql脚本

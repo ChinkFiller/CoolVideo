@@ -11,7 +11,7 @@
 		<uni-icons custom-prefix="iconfont" type="icon-baitianheitian" color="#5e6d82" size="30" style="margin-top: 35px;margin-left: 5px;margin-right: 5px;" @click="switch_to_day()"></uni-icons>
 		<span :style="{visibility:placehold_switch}" @click="search_bar_focus=true"><i class="fa fa-search"></i>输入你想搜索的番剧</span>
 	</view>
-	<scroll-view scroll-y="true" :style="{height:`${main_page_height}px`}"  @scroll="scroll_position" refresher-enabled="true" @refresherrefresh="onRefresh" :refresher-triggered="triggered" @scrolltolower="end_load()" refresher-background="rgba(0,0,0,0)" v-show='page_index==0'>
+	<scroll-view scroll-y="true" :style="{height:`${main_page_height}px`}"  @scroll="scroll_position" refresher-enabled="true" @refresherrefresh="onRefresh" :refresher-triggered="triggered" @scrolltolower="end_load()" refresher-background="rgba(0,0,0,0)" v-show='page_index==0' :scroll-top="controlPage">
 		<!-- banner，后期根据接口修改数据 -->
 		<view class="shop_stream_img">
 			<swiper autoplay="true" interval="3000" duration="1000" circular="true" @change="change_now_img" style="width: 100%;" id="show">
@@ -41,14 +41,14 @@
 		<view style="margin-left: 20px;color: white;" v-if="is_dark">番剧推荐</view>
 		<view style="margin-left: 20px;" v-else>番剧推荐</view>
 		<view class="shop-list">
-			<view class="shop-list-item" v-for="item,index in item_data" @click="go_to_player(item.id,item.img,item.title,item.tag) " style="background-color: #4c4c4c;color: white;" v-if="is_dark">
+			<view class="shop-list-item" v-for="item,index in item_data" @click="go_to_player(item.id,item.img,item.title,item.tag) " style="background-color: #4c4c4c;color: white;" :animation="item.animation" v-if="is_dark">
 				<view class="img_show">
 					<image :src="item.img" @error="error_img_handle('item_data',index)"></image>
 					<view class="shop-list-item-tag">&nbsp;&nbsp;&nbsp;{{item.tag}}</view>
 				</view>
 				<view class="shop-list-item-title">{{item.title}}</view>
 			</view>
-			<view class="shop-list-item" v-for="item,index in item_data" @click="go_to_player(item.id,item.img,item.title,item.tag) " style="background-color: #dadada;" v-else>
+			<view class="shop-list-item" v-for="item,index in item_data" @click="go_to_player(item.id,item.img,item.title,item.tag) " style="background-color: #dadada;" :animation="item.animation" v-else>
 				<view class="img_show">
 					<image :src="item.img" @error="error_img_handle('item_data',index)"></image>
 					<view class="shop-list-item-tag">&nbsp;&nbsp;&nbsp;{{item.tag}}</view>
@@ -173,11 +173,11 @@
 </template>
 
 <script>
-	import uniIcons from '../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue'
+	import icons from '../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue'
 	import ajax from '../../common/ajax'
 	export default {
 		components:{
-			uniIcons 
+			icons 
 		},
 		onBackPress() {
 			if(this.child_page_position==0){
@@ -219,19 +219,32 @@
 		onReady() {
 			ajax.do_request('/get_command_video',"GET",{},(res)=>{
 				if (!res.error){
-					if (res.data.img_url=="" || res.data.img_url==undefined){ 
-						res.data.img_url="../static/nodata.png"
-					} 
+					this.commandVideosnum+=10
 					for (var i=0;i<res.data.length;i++){
 						try{
-							setTimeout((img,state,name,id)=>{
-								this.item_data.push({
-									img:img,
-									tag:state,
-									title:name,
-									id:id,
+							if (res.data[i].img_url=="" || res.data[i].img_url==undefined){
+								res.data[i].img_url="../static/nodata.png"
+							} 
+							var animate= uni.createAnimation({
+							    duration: 0,
+								timingFunction: 'ease',
+							})
+							animate.scale(1.5,1.5).opacity(0).step()
+							this.item_data.push({
+								img:res.data[i].img_url,
+								tag:res.data[i].state,
+								title:res.data[i].name,
+								id:res.data[i].id,
+								animation:animate.export()
+							})
+							setTimeout((position)=>{
+								var animate1= uni.createAnimation({
+								    duration: 650,
+									timingFunction: 'ease-out',
 								})
-							},150*(i+1),res.data[i].img_url,res.data[i].state,res.data[i].name,res.data[i].id)
+								animate1.scale(1,1).opacity(1).step()
+								this.item_data[(this.commandVideosnum-10)+position].animation=animate1.export()
+							},150*(i+1),i)
 						}catch(err){
 							console.log(err)
 							continue;
@@ -248,6 +261,7 @@
 				now_nav_color:"rgb(218, 193, 151)",//当前的顶部nav颜色
 				placehold_switch:"visible",//搜索提示词是否消失
 				now_page_position:0,//当前滑窗的位置
+				controlPage:0,
 				main_page_height:0,//主窗口高度
 				triggered: false,//滑窗是否刷新
 				is_dark:false,//是否为暗色模式
@@ -279,7 +293,8 @@
 					}
 				],
 				item_data:[],//推荐视频的json储存
-				fast_function_data:[]//快速功能的数组，仅支持web跳转，暂不支持视频跳转
+				fast_function_data:[],//快速功能的数组，仅支持web跳转，暂不支持视频跳转
+				commandVideosnum:0
 			}
 		},
 		onLoad() {
@@ -433,8 +448,12 @@
 			back_to_top(){
 				this.now_nav_color=this.now_bg_color
 				if (this.page_index==0){
-					this.now_page_position=0;
-					this.onRefresh()
+					this.controlPage=this.now_page_position
+					this.$nextTick(()=>{
+						this.controlPage=0
+						// this.onRefresh()
+					})
+					
 				}
 			},
 			change_now_tag_position(e){
@@ -449,56 +468,89 @@
 			onRefresh() { 
 				this.triggered=true; 
 				this.item_data.splice(0,this.item_data.length)
-                ajax.do_request('/get_command_video',"GET",{},(res)=>{
-                	if (!res.error){
-                		if (res.data.img_url=="" || res.data.img_url==undefined){ 
-                			res.data.img_url="../static/nodata.png"
-                		}
-                		for (var i=0;i<res.data.length;i++){
-                			try{
-								setTimeout((img,state,name,id)=>{
-									this.item_data.push({
-										img:img,
-										tag:state,
-										title:name,
-										id:id
-									})
-								},150*(i+1),res.data[i].img_url,res.data[i].state,res.data[i].name,res.data[i].id)
-								setTimeout(() => {
-								    this.triggered = false;
-								}, 800)
-                			}catch(err){
-								this.triggered = false;
-                				console.log(err)
-                				continue;
-                			}
-                		}
-                	}else{
-						this.triggered = false;
-					}
-                })
-            },
-			end_load(){
+				this.commandVideosnum=0
 				ajax.do_request('/get_command_video',"GET",{},(res)=>{
 					if (!res.error){
-						if (res.data.img_url=="" || res.data.img_url==undefined){ 
-							res.data.img_url="../static/nodata.png"
-						}
+						this.commandVideosnum+=10
 						for (var i=0;i<res.data.length;i++){
 							try{
-								setTimeout((img,state,name,id)=>{
-									this.item_data.push({
-										img:img,
-										tag:state,
-										title:name,
-										id:id
+								if (res.data[i].img_url=="" || res.data[i].img_url==undefined){
+									res.data[i].img_url="../static/nodata.png"
+								} 
+								var animate= uni.createAnimation({
+								    duration: 0,
+									timingFunction: 'ease',
+								})
+								animate.scale(1.5,1.5).opacity(0).step()
+								this.item_data.push({
+									img:res.data[i].img_url,
+									tag:res.data[i].state,
+									title:res.data[i].name,
+									id:res.data[i].id,
+									animation:animate.export()
+								})
+								setTimeout((position)=>{
+									var animate1= uni.createAnimation({
+									    duration: 650,
+										timingFunction: 'ease-out',
 									})
-								},150*(i+1),res.data[i].img_url,res.data[i].state,res.data[i].name,res.data[i].id)
+									animate1.scale(1,1).opacity(1).step()
+									this.item_data[(this.commandVideosnum-10)+position].animation=animate1.export()
+								},150*(i+1),i)
+								setTimeout(() => {
+									this.triggered = false;
+						        }, 1000)
 							}catch(err){
 								console.log(err)
 								continue;
 							}
 						}
+						this.triggered = false;
+					}else{
+						this.triggered = false;
+					}
+				})
+            },
+			end_load(){
+				ajax.do_request('/get_command_video',"GET",{},(res)=>{
+					if (!res.error){
+						this.commandVideosnum+=10
+						for (var i=0;i<res.data.length;i++){
+							try{
+								if (res.data[i].img_url=="" || res.data[i].img_url==undefined){
+									res.data[i].img_url="../static/nodata.png"
+								} 
+								var animate= uni.createAnimation({
+								    duration: 0,
+									timingFunction: 'ease',
+								})
+								animate.scale(1.5,1.5).opacity(0).step()
+								this.item_data.push({
+									img:res.data[i].img_url,
+									tag:res.data[i].state,
+									title:res.data[i].name,
+									id:res.data[i].id,
+									animation:animate.export()
+								})
+								setTimeout((position)=>{
+									var animate1= uni.createAnimation({
+									    duration: 650,
+										timingFunction: 'ease-out',
+									})
+									animate1.scale(1,1).opacity(1).step()
+									this.item_data[(this.commandVideosnum-10)+position].animation=animate1.export()
+								},150*(i+1),i)
+								setTimeout(() => {
+									this.triggered = false;
+						        }, 800)
+							}catch(err){
+								console.log(err)
+								continue;
+							}
+						}
+						this.triggered = false;
+					}else{
+						this.triggered = false;
 					}
 				})
 			}
@@ -616,10 +668,6 @@
 		justify-content: flex-start;
 	}
 	.shop-list-item{
-		animation-name: loadin;
-		animation-duration: 0.4s; 
-		animation-timing-function: ease-in;
-		animation-iteration-count: 1;
 		width: 47.5%;
 		margin-left: 1.25%;
 		margin-right: 1.25%;

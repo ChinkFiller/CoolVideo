@@ -1,7 +1,7 @@
 <template>
 	<div style="width: 100%;height: 35px;position: relative;background-color: black;" v-if="!getFullScreenState()"></div>
 	<div>
-		<video id="myVideo" ref="myVideo" :src="video" controls="false" autoplay="true" @timeupdate="videoTimeUpdate" @ended="pauseOrPlayVideo()" :style="{height:`${originVideoHeigh}px`}" enable-danmu="true" :danmu-list="danmuList"></video>
+		<video id="myVideo" ref="myVideo" :src="video" controls="false" autoplay="true" @timeupdate="videoTimeUpdate" @ended="pauseOrPlayVideo()" :style="{height:`${originVideoHeigh}px`}" http-cache='true'></video>
 	</div>
 	<div class="controls" :style="{width:`${width}px`}" @touchstart="start" @touchend="end" @touchmove="move" @longpress="speed()">
 		<div class="speed_icon" v-if="isSpeeding">
@@ -9,7 +9,7 @@
 				<text style="color: white;">2倍速播放中>>></text>
 			</div>
 		</div>
-		<div class="speed_icon" v-if="isChangeVolume">
+		<div class="speed_icon" v-if="isChangeVolume"> 
 			<div class="text_bar">
 				<text style="color: white;">音量:{{newVolum}}%</text>
 			</div>
@@ -24,6 +24,7 @@
 				<text style="color: white;">{{formateTimeFromNumber(nowVideoPosition)}}/{{formateTimeFromNumber(fullVideTIme)}}</text>
 			</div>
 		</div>
+		<jdy-barrage ref="jdyBarrage" :screenWidth="width"></jdy-barrage>
 	</div>
 	<div class="control-bar" :style="{width:`${width}px`,transform:`translateY(${controlIsShow*40}px)`}" v-if="isFullScreen">
 		<image :src="controlIcon" style="width: 30px;height: 30px;margin-top: 5px;margin-left: 15px;margin-right: 15px;" @click="pauseOrPlayVideo()"/>
@@ -54,12 +55,13 @@
 	</div>
 	<!-- 顶部遮挡层 -->
 	<div style="width: 100%;height: 35px;position: absolute;background-color: black;top: 0px;" :style="{width:`${width}px`}" v-if="!getFullScreenState()"></div>
-	
 </template>
 
 <script>
-import ajax from '../../common/ajax'
+    import ajax from '../../common/ajax'
+	import jdyBarrage from '@/components/jdy-barrage/jdy-barrage.vue'
 	export default {
+		components:{jdyBarrage},
 		data(){
 			return{
 				video:"",
@@ -93,6 +95,7 @@ import ajax from '../../common/ajax'
 				isChangeLighte:false,
 				newVolum:0,
 				newLight:0,
+				videoShow:true,
 				danmuList:[],
 			}
 		},
@@ -104,7 +107,7 @@ import ajax from '../../common/ajax'
 				this.videoTitle=res.title
 				ajax.do_request("/getdanmu","GET",{id:res.id,part:res.part},(back)=>{
 					if(!back.error){
-						this.danmuList=back.data
+					    this.$refs.jdyBarrage.setBarrages(back.data)
 						console.log("加载弹幕成功")
 						setTimeout(()=>{
 							this.video=res.url
@@ -154,7 +157,16 @@ import ajax from '../../common/ajax'
 			},5000)
 		},
 		onUnload() {
-			console.log("页面关闭了")
+			uni.$off("")
+		},
+		onShow() {
+			uni.$on("danmuSwitch",res=>{
+				if (res.state){
+					this.$refs.jdyBarrage.show()
+				}else{
+					this.$refs.jdyBarrage.hide()
+				}
+			})
 		},
 		methods:{
 			start(e){
@@ -169,10 +181,12 @@ import ajax from '../../common/ajax'
 					this.$refs.myVideo.pause()
 					this.isPlaying=false
 					this.controlIcon="../../static/playicon.png"
+					this.$refs.jdyBarrage.stop()
 				}else{
 					this.$refs.myVideo.play()
 					this.isPlaying=true
-					this.controlIcon="../../static/pauseicon.png" 
+					this.controlIcon="../../static/pauseicon.png"
+					 this.$refs.jdyBarrage.run()
 				}
 			},
 			end(e){
@@ -183,6 +197,7 @@ import ajax from '../../common/ajax'
 				this.isJunmPing=false
 				if (this.isJudgedTouchDirection && this.TouchDirection==2){
 					this.$refs.myVideo.seek(this.nowVideoPosition)
+					this.$refs.jdyBarrage.clear()
 				}
 				setTimeout(()=>{
 					if(this.touchNum == 1){
@@ -297,8 +312,10 @@ import ajax from '../../common/ajax'
 				this.$refs.myVideo.playbackRate(2)
 			},
 			videoTimeUpdate(e){
+				let nowtime=e.detail.currentTime
+				this.$refs.jdyBarrage.sendBarrageOnTime(nowtime)
 				if (!this.isChangeing){
-					this.nowVideoPosition=e.detail.currentTime
+					this.nowVideoPosition=nowtime
 					this.fullVideTIme=e.detail.duration;
 				}
 			},
@@ -314,7 +331,9 @@ import ajax from '../../common/ajax'
 				return `${min}:${sec}`;
 			},
 			jumpToPosition(e){
+				this.nextDanmuCheckTime=e.detail.value
 				this.$refs.myVideo.seek(e.detail.value)
+				this.$refs.jdyBarrage.clear()
 				this.isChangeing=false
 				if (!this.isPlaying){
 					this.$refs.myVideo.play()
@@ -366,6 +385,9 @@ import ajax from '../../common/ajax'
 					this.isRightBarShow=1
 				}
 			},
+			getRandomInt(min, max) {
+			  return Math.floor(Math.random() * (max - min + 1)) + min;
+			},
 			sendOneDanmu(text,id,part,color){
 				try{
 					const time=parseInt(this.nowVideoPosition)
@@ -374,9 +396,10 @@ import ajax from '../../common/ajax'
 					}
 					ajax.do_request("/setdanmu","POST",{id:id,text:text,time:time,part:part,color:color},(res)=>{
 						if (!res.error){
-							this.$refs.myVideo.sendDanmu({
+							this.$refs.jdyBarrage.add({
 								text: text,
-								color: color
+								color: color,
+								time:time
 							})
 							console.log('发送成功')
 						}else{

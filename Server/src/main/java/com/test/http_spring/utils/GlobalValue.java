@@ -9,15 +9,15 @@ import java.util.*;
 @Component
 public class GlobalValue {
         //测试用路径
-//         public static final String randomAdminPath ="admin";
+         public static final String randomAdminPath ="admin";
         //随机后台路径
-        public static final String randomAdminPath = ToolsFunction.MD5(UUID.randomUUID().toString()).substring(0, 8);
+//        public static final String randomAdminPath = ToolsFunction.MD5(UUID.randomUUID().toString()).substring(0, 8);
         //子界面的路由注册，非注册的路由会被返回404
 
         //顺序，页面名称，引入js文件的名称，获取数据的api名称，删除数据api的名称，添加数据api的界面名称，修改数据api的名称,添加数据弹窗标题，界面的标题
         public static final Map<String,ArrayList<String>> childPageNameList=new HashMap<>(){{
             put("welcome",new ArrayList<>(Arrays.asList("","","","","","","")));
-            //控制器姐界面
+            //控制器界面
             put("user-control",new ArrayList<>(Arrays.asList("userFunctions.js","getAllUser","removeUser","user-add","updateUser","添加一个用户","用户管理")));
             put("cdn-control",new ArrayList<>(Arrays.asList("cdnFunctions.js","getCdnData","removeCdnData","cdn-add","","添加一个缓存信息","本地缓存管理")));
             put("resource-control",new ArrayList<>(Arrays.asList("resourceFunctions.js","getAllVideo","removeData","resource-add","updateData","添加一条数据","视频数据管理")));

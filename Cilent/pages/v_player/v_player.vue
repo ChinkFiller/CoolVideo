@@ -15,6 +15,7 @@
 		<span class="jubao" @click.native.stop="jubaoListisShow=!jubaoListisShow;colorSelectorShow=false">!</span>
 		<input v-model="danmu" @confirm="sendDanmu()" type="text" name="" id="" class="danmu-input" style="background-color: #717171;">
 		<span @click="sendDanmu()" class="danmu-send-btn" style="background-color: #717171;">发送</span>
+		<span style="position: absolute;right:245px;margin-top: 5px;"><uni-icons :type="danmuIcon" size="30" color="white" @click="danmuswitch()"></uni-icons></span>
 		<view style="background-color: red;width: 30px;border-radius: 3px;height: 6px;margin-left: 3px;"></view>
 	</view>
 	<view style="margin-left: 20px;font-size: 18px;margin-bottom: 10px;" id="test" v-else>
@@ -23,6 +24,7 @@
 		<span class="jubao" @click.native.stop="jubaoListisShow=!jubaoListisShow">!</span>
 		<input v-model="danmu" @confirm="sendDanmu()" type="text" name="" id="" class="danmu-input" style="background-color: #cfcfcf;">
 		<span @click="sendDanmu()" class="danmu-send-btn" style="background-color: #cfcfcf;">发送</span>
+		<span style="position: absolute;right:245px;margin-top: 5px;"><uni-icons :type="danmuIcon" size="30" color="#434343" @click="danmuswitch()"></uni-icons></span>
 		<view style="background-color: red;width: 30px;border-radius: 3px;height: 6px;margin-left: 3px;"></view>
 	</view>
 	<scroll-view scroll-y="true" :style="{height:`${bar_heigh}px`}" @click="jubaoListisShow=false;colorSelectorShow=false">
@@ -132,6 +134,7 @@
 				danmuList:[],
 				danmucolor:'white',
 				colorSelectorShow:false,
+				danmuIcon:"chatbubble-filled",
 				select:["普通线路[已选择]","加速线路"],
 				fast_function_data:[//快速功能的json
 					{
@@ -363,6 +366,15 @@
 					animationDuration:300,
 					animationType:'slide-in-right'
 				})
+			},
+			danmuswitch(){
+				if (this.danmuIcon=="chatbubble-filled"){
+					this.danmuIcon="chatbubble"
+					uni.$emit("danmuSwitch",{state:false})
+				}else{
+					this.danmuIcon="chatbubble-filled"
+					uni.$emit("danmuSwitch",{state:true})
+				}
 			},
 			rememberHistory(data){
 				data[0]=parseInt(new Date().getTime()/1000)
@@ -723,6 +735,7 @@
 				
 			},
 			share(){
+				uni.$emit("danmuSwitch",{state:false})
 				uni.showToast({
 					icon:'error',
 					title:"暂未开启"
@@ -797,21 +810,21 @@
 	.danmu-input{
 		position: absolute;
 		display: inline-block;
-		right: 120px;
+		right: 80px;
 		margin-top: 8px;
-		border-top-left-radius: 10px;
-		border-bottom-left-radius: 10px;
+		border-radius: 10px;
 		text-indent: 0.5em;
-		font-size: 16px;
-        width: 35%;
+		font-size: 15px;
+        width: 160px;
 		height: 20px;
 	}
 	.danmu-send-btn{
 		position: absolute;
 		right: 80px;
-		margin-top: 8px;
+		margin-top: 8px; 
+		height: 20px;
 	    font-size:15px;
-		padding: 0px 8px 0.5px 5px;
+		padding: 0px 8px 0px 5px;
 		border-top-right-radius: 10px;
 		border-bottom-right-radius: 10px;
 	}
