@@ -3,7 +3,8 @@
 	<!-- 背景颜色设置，根据是否为暗色模式来设置 -->
 	<page-meta page-style="background:#343434" v-if="is_dark"></page-meta>
 	<page-meta page-style="background:#eef0f1" v-else></page-meta>
-	
+	<popup-asking ref="version"></popup-asking>
+	<popup-notice ref="notice"></popup-notice>
 	<!-- 主页的html结构 -->
 	<view class="nav" :style="{background:now_nav_color}">
 		<uni-icons type="bars" color="#5e6d82" size="30" style="margin-top: 35px;margin-right: 5px;margin-left: 5px;" @click="show_child_page()"></uni-icons>
@@ -43,14 +44,14 @@
 		<view class="shop-list">
 			<view class="shop-list-item" v-for="item,index in item_data" @click="go_to_player(item.id,item.img,item.title,item.tag) " style="background-color: #4c4c4c;color: white;" :animation="item.animation" v-if="is_dark">
 				<view class="img_show">
-					<image :src="item.img" @error="error_img_handle('item_data',index)"></image>
+					<my-img :src="item.img" style="width: 100%;aspect-ratio: 0.75;"></my-img>
 					<view class="shop-list-item-tag">&nbsp;&nbsp;&nbsp;{{item.tag}}</view>
 				</view>
 				<view class="shop-list-item-title">{{item.title}}</view>
 			</view>
 			<view class="shop-list-item" v-for="item,index in item_data" @click="go_to_player(item.id,item.img,item.title,item.tag) " style="background-color: #dadada;" :animation="item.animation" v-else>
 				<view class="img_show">
-					<image :src="item.img" @error="error_img_handle('item_data',index)"></image>
+					<my-img :src="item.img" style="width: 100%;aspect-ratio: 0.75;"></my-img>
 					<view class="shop-list-item-tag">&nbsp;&nbsp;&nbsp;{{item.tag}}</view>
 				</view>
 				<view class="shop-list-item-title">{{item.title}}</view>
@@ -145,7 +146,7 @@
 				<view class="day_update_list">
 					<view class="day_update_list_item" v-for="item,index in all_update_data[one_day_data_index]" style="background-color: #4c4c4c;color: white;" v-if="is_dark" @click="go_to_player(item.id,item.img_url,item.name,item.state) ">
 						<view class="day_update_list_image_show">
-							<image :src="item.img_url" mode="aspectFill" @error="error_img_handle"></image>
+							<my-img :src="item.img_url" mode="aspectFill" class="img"></my-img>
 						</view>
 						<view class="day_update_list_textbar">
 							<!-- <view class="day_update_list_title" v-if="item.name.length>14" style="animation: move_text 5s 0.5s infinite linear;">{{item.name}}&nbsp;&nbsp;&nbsp;</view> -->
@@ -155,7 +156,7 @@
 					</view>
 					<view class="day_update_list_item" v-for="item,index in all_update_data[one_day_data_index]" style="background-color: #c8c8c8;" v-else @click="go_to_player(item.id,item.img_url,item.name,item.state) ">
 						<view class="day_update_list_image_show">
-							<image :src="item.img_url" mode="aspectFill" @error="error_img_handle_update(one_day_data_index,index)"></image>
+							<my-img :src="item.img_url" mode="aspectFill" class="img"></my-img>
 						</view>
 						<view class="day_update_list_textbar">
 							<!-- <view class="day_update_list_title" v-if="item.name.length>14" style="animation: move_text 5s 0.5s infinite linear;">{{item.name}}&nbsp;&nbsp;&nbsp;</view> -->
@@ -175,9 +176,15 @@
 <script>
 	import icons from '../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue'
 	import ajax from '../../common/ajax'
+	import popupasking from '@/components/popup-asking/popup-asking.vue'
+	import popupnotice from '@/components/popup-notice/popup-notice.vue'
+	import myimg from '@/components/my-img/my-img.vue'
 	export default {
 		components:{
-			icons 
+			icons,
+			popupasking,
+			popupnotice,
+			myimg
 		},
 		onBackPress() {
 			if(this.child_page_position==0){
@@ -217,13 +224,45 @@
 			}
 		},
 		onReady() {
+			ajax.do_request('/app/version','GET',{},(res)=>{
+				if (!res.error){
+					if (parseFloat(res.data.clientVersion)>parseFloat(getApp().globalData.version)){
+						this.$refs.version.show('更新提示',`检测到新版本V${parseFloat(res.data.clientVersion)},当前版本V${parseFloat(getApp().globalData.version)}`,false,(res1)=>{
+							if (res1.state) {
+								plus.runtime.openURL(res.data.url);
+								plus.runtime.quit()
+							} 
+							else {
+								plus.runtime.quit()
+							}
+						})
+					}else{
+						ajax.do_request("/app/notice","GET",{},(res)=>{
+							if (!res.error){
+								if(res.data.show){
+									if (getApp().globalData.isBoot){
+										this.$refs.notice.show(res.data.title,res.data.content)
+										getApp().globalData.isBoot=false
+									}
+								}
+							}
+						})
+					}
+				}else{
+					uni.showToast({
+						title: '版本校验失败',
+						icon: 'error',
+						duration: 2000
+					})
+				}
+			},3000)
 			ajax.do_request('/get_command_video',"GET",{},(res)=>{
 				if (!res.error){
 					this.commandVideosnum+=10
 					for (var i=0;i<res.data.length;i++){
 						try{
 							if (res.data[i].img_url=="" || res.data[i].img_url==undefined){
-								res.data[i].img_url="../static/nodata.png"
+								res.data[i].img_url="../static/nodata.png" 
 							} 
 							var animate= uni.createAnimation({
 							    duration: 0,
@@ -396,7 +435,7 @@
 				uni.navigateTo({
 					url:"/pages/v_player/v_player?id="+id+'&img='+img+'&title='+title+'&part='+state,
 					animationDuration:300,
-					animationType:'zoom-fade-out'
+					animationType:'slide-in-right'
 				})
 			},
 			show_child_page(){
@@ -680,10 +719,10 @@
 		border-top-right-radius: 10px;
 		border-top-left-radius: 10px;
 	}
-	.img_show image{
+	.img_show .img{
 		width: 100%;
-		border-top-right-radius: 10px;
-		border-top-left-radius: 10px;
+		/* border-top-right-radius: 10px;
+		border-top-left-radius: 10px; */
 	}
 	.shop-list-item-title{
 		position: relative;
@@ -787,7 +826,7 @@
 		margin-bottom: 5px;
 		background-color: #202122;
 	}
-	.day_update_list_image_show image{
+	.day_update_list_image_show .img{
 		width: 100%;
 		height: 100%;
 		border-radius: 10px;

@@ -1,18 +1,7 @@
 <template>
 	<page-meta page-style="background:#343434" v-if="is_dark"></page-meta>
 	<page-meta page-style="background:#eef0f1" v-else></page-meta>
-	<view class="full" v-if="is_asking" @click="is_asking=false">
-		<view class="asking">
-			<p style="font-size: 18px;margin-top: 5px;">提示</p>
-			<br>
-			<p>确定删除这个历史记录吗？</p>
-			<br>
-			<view class="option">
-				<button @click="is_asking=false;">取消</button>
-				<button style="color: red;" @click="delete_data()">确定</button>
-			</view>
-		</view>
-	</view>
+	<popup-asking ref="ask"></popup-asking>
 	<view class="top_span"></view>
 	<view style="margin-left: 10px;font-size: 18px;color: white;margin-bottom: 5px;" v-if="is_dark"><i class="fa fa-angle-left" style="font-size: 35px;margin-right: 15px;transform: translateY(5px);" @click="back()"></i>观看历史</view>
 	<view style="margin-left: 10px;font-size: 18px;margin-bottom: 5px;" v-else><i class="fa fa-angle-left" style="font-size: 35px;margin-right: 15px;transform: translateY(5px);" @click="back()"></i>观看历史</view>
@@ -20,7 +9,7 @@
 	<view style="height: 2px;background-color: #9a9b9c;width: 100%" v-else></view>
 	<scroll-view scroll-y="true" style="width: 100%;" :style="{height:`${main_hight}px`}">
 		<view class="other_video" v-for="item,index in his_data" @click="go_to_player(item.id,item.img_url,item.title,item.full)">
-			<image :src="item.img_url" mode="aspectFill"></image>
+			<my-img class="img" :src="item.img_url" mode="aspectFill"></my-img>
 			<view class="intruduce" v-if="is_dark">
 				<view style="color: white;" class="text_bar">
 					<!-- <view class="other_video_title" v-if="item.title.length>14" style="animation: move_text 5s 0.5s infinite linear;">{{item.title}}</view> -->
@@ -45,7 +34,13 @@
 
 <script>
 	import ajax from '../../common/ajax';
+	import popupasking from '@/components/popup-asking/popup-asking.vue'
+	import myimg from '@/components/my-img/my-img.vue'
 	export default {
+		components:{
+			popupasking,
+			myimg
+		},
 		onShow(){
 			var data=uni.getStorageSync('history')
 			var timeset=data.splice(0,1)[0]
@@ -124,7 +119,7 @@
 							uni.navigateTo({
 								url:`/pages/v_player/v_player?id=${id}&img=${res.data.img_url}&title=${res.data.name}&part=${res.data.state}`,
 								animationDuration:300,
-								animationType:'zoom-fade-out'
+								animationType:'slide-in-right'
 							})
 						}
 					}else{
@@ -132,7 +127,7 @@
 							uni.navigateTo({
 								url:`/pages/v_player/v_player?id=${id}&img=${img}&title=${title}&part=${state}`,
 								animationDuration:300,
-								animationType:'zoom-fade-out'
+								animationType:'slide-in-right'
 							})
 						}
 					}
@@ -166,17 +161,19 @@
 			   //同步云端数据
 			   this.rememberHistory(tem_data)
 			   this.can_jump=true
-			   this.is_asking=false
 			   uni.showToast({
 			   	icon:'none',
 				title:"删除成功!"
 			   })
 			},
 			test(id){
-				this.can_jump=false
-			    this.is_asking=true
 				this.now_id=id
-				// this.his_data=this.his_data.reverse()
+				this.can_jump=false
+				this.$refs.ask.show('删除历史','是否删除这个历史记录?',true,(res)=>{
+					if (res.state){
+						this.delete_data()
+					}
+				})
 			},
 			back(){
 				uni.navigateBack({
@@ -213,16 +210,20 @@
 		height: 35px;
 	}
 	.other_video{
-		width: 100%;
+		width: 93%;
+		margin-left: 3%;
+		margin-right: 3%;
 		height: 100px;
-		margin-top: 5px;
+		margin-top: 15px;
 		margin-bottom: 5px;
 		border-bottom: solid 0px gray;
+		display: flex;
+		flex-wrap: nowrap;
 	}
-	.other_video image{
+	.img{
 		width: 30%;
 		height: 90px;
-		border-radius: 10px;
+     	border-radius: 10px;
 		margin-top: 2.5px;
 		margin-bottom: 5px;
 		margin-left: 1.5%;
@@ -248,39 +249,4 @@
 		font-size: 20px;
 		bottom: 10px;
 	}
-	.full{
-		position: absolute;
-		width: 100%;
-		height: 100%;
-		background-color: rgba(0, 0, 0, 0.6);
-		z-index: 1;
-	}
-	.asking{
-		position: absolute;
-		width: 60%;
-		aspect-ratio: 1.5;
-		background-color: white;
-		margin: 0 20% 0 20%;
-		top: 50%;
-		transform: translateY(-50%);
-		text-align: center;
-		border-radius: 10px;
-	}
-	.asking .option{
-		position: absolute;
-		bottom: 0px;
-		width: 100%;
-		display: flex;
-		border-top-style: solid;
-		border-top-width: 1px;
-		border-top-color: gray;
-	}
-	.asking .option button{
-		width: 50%;
-		background-color: transparent;
-	}
-	button::after {
-	border: none !important;
-	}
-	
 </style>

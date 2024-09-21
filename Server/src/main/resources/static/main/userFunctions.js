@@ -1,11 +1,13 @@
 var tableStyle=[[
-    {field: 'user', title: '用户名', width: "20%"},
-    {field: 'pawd', title: '密码', minWidth: "20%"},
-    {field: 'name', title: '昵称', minWidth: "20%"},
-    {field: 'vip', title: '权限等级', width: "15%",sort: true},
+    {field: 'user', title: '用户名', width: "10%"},
+    {field: 'pawd', title: '密码', minWidth: "15%"},
+    {field: 'name', title: '昵称', minWidth: "10%"},
+    {field: 'vip', title: '权限等级', width: "10%",sort: true},
+    {field: 'speedtimes', title: '加速次数', width: "10%"},
+    {field: 'viptime', title: '会员到期时间', width: "20%"},
     {field: 'option', title: '操作', width: "15%",templet:
         '<div class="opbtn" >\n' +
-        '     <i class="layui-icon layui-icon-edit" onclick="changeData(\'{{d.user}}\',\'{{d.pawd}}\',\'{{d.name}}\',\'{{d.vip}}\')"></i>\n' +
+        '     <i class="layui-icon layui-icon-edit" onclick="changeData(\'{{d.user}}\',\'{{d.pawd}}\',\'{{d.name}}\',\'{{d.vip}}\',\'{{d.viptime}}\',\'{{d.speedtimes}}\')"></i>\n' +
         '     <i class="layui-icon layui-icon-delete" onclick="removeData(apiAddrRemoveData,\'{{d.user}}\')"></i>\n' +
         '</div>'
     }
@@ -22,7 +24,7 @@ function search(key){
     reloadTable(search_res)
 }
 
-function changeData(user,pawd,name,vip){
+function changeData(user,pawd,name,vip,date,speedtimes){
     layui.layer.open({
         type: 1,
         area: ['420px', '370px'], // 宽高
@@ -35,6 +37,8 @@ function changeData(user,pawd,name,vip){
             '            <option value="1"'+`${parseInt(vip)===1?'selected':''}`+'>1</option>\n' +
             '            <option value="2"'+`${parseInt(vip)===2?'selected':''}`+'>2</option>\n' +
             '        </select>\n' +
+            '        <input name="speedtimes" value="'+speedtimes+'" style="display: none">'+
+            '        <input style="margin-top: 10px;margin-bottom: 10px" type="text" class="layui-input" id="ID-laydate-demo" placeholder="yyyy-MM-dd" name="viptime">\n' +
             '        <div style="margin-top: 35px">\n' +
             '            <button type="submit" class="layui-btn" style="margin-left: 25%;width: 20%;margin-right: 2.5%">确定</button>\n' +
             '            <button type="button" class="layui-btn" style="margin-right:25%;width:20%;margin-left: 2.5%" onclick="layer.closeAll(`page`)">取消</button>\n' +
@@ -44,6 +48,10 @@ function changeData(user,pawd,name,vip){
             layui.use('form', function(){
                 var form = layui.form;
                 form.render();
+            });
+            layui.laydate.render({
+                elem: '#ID-laydate-demo',
+                value:date
             });
         }
     })

@@ -1,6 +1,7 @@
 <template>
 	<page-meta page-style="background:#343434" v-if="is_dark"></page-meta>
 	<page-meta page-style="background:#eef0f1" v-else></page-meta>
+	<popup-input ref="inputbar"></popup-input>
 	<view class="top_nav"></view>
 	<view style="margin-left: 15px;font-size: 20px;height: 50px;line-height: 55px;color: white;" v-if="is_dark"><i class="fa fa-angle-left" style="font-size: 35px;margin-right: 15px;transform: translateY(5px);" @click="back()"></i>系统设置</view>
 	<view style="margin-left: 15px;font-size: 20px;height: 50px;line-height: 55px;" v-else><i class="fa fa-angle-left" style="font-size: 35px;margin-right: 15px;transform: translateY(5px);" @click="back()"></i>系统设置</view>
@@ -29,7 +30,7 @@
 			<uni-icons type="right" size="30" style="margin-left: auto;margin-right: 15px;margin-top: 15px;" v-if="is_dark" color="white"></uni-icons>
 			<uni-icons type="right" size="30" style="margin-left: auto;margin-right: 15px;margin-top: 15px;" v-else></uni-icons>
 		</view>
-		<view class="one_setting">
+		<view class="one_setting" @click="checkUpdate()">
 			<view class="title" style="color: white;" v-if="is_dark">客户端版本 {{cilentVersion}}</view>
 			<view class="title" v-else>客户端版本 {{cilentVersion}}</view>
 		</view>
@@ -39,9 +40,11 @@
 <script>
 	import uniIcons from '../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue'
 	import ajax from '../../common/ajax.js'
+	import popupinput from '@/components/popup-input/popup-input.vue'
 	export default {
 		components:{
-			uniIcons 
+			uniIcons,
+			popupinput,
 		},
 		onLoad() {
 			uni.getSystemInfo({
@@ -50,6 +53,7 @@
 				}
 			})
 			this.is_dark=getApp().globalData.dark
+			this.cilentVersion='V'+getApp().globalData.version
 		},
 		data() {
 			return {
@@ -57,7 +61,7 @@
 				is_dark:false,
 				testMode:uni.getStorageSync('testMode'),
 				serverUrl:uni.getStorageSync("serverUrl"),
-				cilentVersion:"V1.26 Build by Conyafer"
+				cilentVersion:''
 			}
 		},
 		methods: {
@@ -68,58 +72,109 @@
 					animationDuration:200
 				})
 			},
-			changeServerUrl(){
-				uni.showModal({
-					title: '服务器地址',
-					editable:true,
-					content:"已认证",
-					placeholderText:this.serverUrl,
-					confirmText: '确认',
-					cancelText: '取消',
-					success:(res)=>{
-						if (res.confirm){
-							if (!(res.content=='')){
-								//console.log(res.content)
-								if (res.content.startsWith("http://")||res.content.startsWith("https://")){
-									let data=res.content
-									if (data.charAt(data.length-1)=='/'){
-										data=data.slice(0,data.length-1)
+			checkUpdate(){
+				ajax.do_request('/app/version','GET',{},(res)=>{
+					if (!res.error){
+						if (parseFloat(res.data.clientVersion)>parseFloat(getApp().globalData.version)){
+							uni.showModal({
+								title: '检测到新版本',
+								content: `检测到新版本V${parseFloat(res.data.clientVersion)},当前版本V${parseFloat(getApp().globalData.version)}`,
+								success: (res1)=> {
+									if (res1.confirm) {
+										plus.runtime.openURL(res.data.url);
+									} 
+									else {
+										plus.runtime.quit()
 									}
-									uni.request({
-										url:data+"/get_weekdata",
-										method:"GET",
-										timeout:2000,
-										success:(res)=>{
-											if (res.statusCode==200){
-												uni.setStorageSync("serverUrl",data)
-												this.serverUrl=data
-												uni.showToast({
-													title:"修改成功！",
-												})
-											}else{
-												uni.showToast({
-													title:"服务器验证失败",
-													icon:'error'
-												})
-											}
-										},
-										fail: (res) => {
-											uni.showToast({
-												title:"服务器验证失败",
-												icon:'error'
-											})
-										}
-									})
-								}else{
-									uni.showToast({
-										title:"服务器地址格式有误",
-										icon:'error'
-									})
 								}
+							})
+						}else{
+							uni.showToast({
+								title:'当前已是最新版',
+								icon:'none'
+							})
+						}
+					}else{
+						uni.showToast({
+							title: '版本校验失败',
+							icon: 'error',
+							duration: 2000
+						})
+					}
+				},3000)
+			},
+			checkServer(url){
+				uni.showLoading({
+				     title: '加载中'
+				});
+				uni.request({
+					url:url+"/app/version",
+					method:"GET",
+					timeout:2500,
+					success:(res)=>{
+						if (res.statusCode==200){
+							if (parseFloat(getApp().globalData.supportServerVersion)<parseFloat(res.data.data.serverVersion)){
+								uni.showToast({
+									title:"客户端版本过低",
+									icon:'error'
+								})
+								uni.hideLoading();
+							}else{
+								uni.setStorageSync("serverUrl",url)
+								this.serverUrl=url
+								uni.showToast({
+									title:"修改成功！",
+								})
+								uni.hideLoading();
+							}
+						}else{
+							uni.showToast({
+								title:"服务器验证失败",
+								icon:'error'
+							})
+							uni.hideLoading();
+						}
+					},
+					fail: (res) => {
+						uni.showToast({
+							title:"服务器验证失败",
+							icon:'error'
+						})
+					}
+				})
+			},
+			changeServerUrl(){
+				this.$refs.inputbar.show("服务器地址",this.serverUrl,true,(res)=>{
+					if (res.state){
+						if (res.content!==''&&this.serverUrl!==res.content){
+							if (res.content.startsWith("http://")||res.content.startsWith("https://")){
+								let data=res.content
+								if (data.charAt(data.length-1)=='/'){
+									data=data.slice(0,data.length-1)
+								}
+								this.checkServer(data)
+							}else{
+								uni.showToast({
+									title:"服务器地址格式有误",
+									icon:'error'
+								})
 							}
 						}
 					}
 				})
+				// uni.showModal({
+				// 	title: '服务器地址',
+				// 	editable:true,
+				// 	content:"已认证",
+				// 	placeholderText:this.serverUrl,
+				// 	confirmText: '确认',
+				// 	cancelText: '取消',
+				// 	success:(res)=>{
+				// 		if (res.confirm){
+
+				// 		}
+				// 	}
+				// })
 			},
 			changeTestMode(){
 				this.testMode=!this.testMode

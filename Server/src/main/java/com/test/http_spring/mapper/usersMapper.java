@@ -16,4 +16,6 @@ public interface usersMapper {
     void createUser(users data);
     void removeOneUser(String username);
     void updateOneUser(users data);
+    void setUserTimes(String token);
+    void resetSpeedTime();
 }

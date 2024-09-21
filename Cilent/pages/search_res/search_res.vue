@@ -3,10 +3,10 @@
 	<page-meta page-style="background:#eef0f1" v-else></page-meta>
 	<view class="top_span"></view>
 	<view class="search-bar" v-if="is_dark">
-		<input type="text" v-model="keyword" @confirm="research()" placeholder="互联网就是搜索信息" style="background-color: #6b6b6b;"/>
+		<input type="text" v-model="keyword" @confirm="research()" placeholder="搜索你想看的番剧" style="background-color: #6b6b6b;"/>
 	</view>
 	<view class="search-bar" v-else>
-		<input type="text" v-model="keyword" @confirm="research()" placeholder="互联网就是搜索信息" style="background-color: #dddddd;"/>
+		<input type="text" v-model="keyword" @confirm="research()" placeholder="搜索你想看的番剧" style="background-color: #dddddd;"/>
 	</view>
 	<scroll-view scroll-y="true" style="width: 100%;" :style="{height:`${main_hight}px`}" refresher-enabled="true" @refresherrefresh="onRefuresh()" :refresher-triggered="triggered" refresher-background="rgba(0,0,0,0)">
 		<view v-if="search_data.length==0&&is_dark" style="text-align: center;width: 100%;color: #dadada;">
@@ -18,14 +18,14 @@
 		<view class="shop-list">
 			<view class="shop-list-item" v-for="item,index in search_data" @click="go_to_player(item.id,item.img_url,item.name,item.state) " style="background-color: #4c4c4c;" v-if="is_dark">
 				<view class="img_show">
-					<image :src="item.img_url"></image>
+					<my-img :src="item.img_url" style="width: 100%;aspect-ratio:0.75;"></my-img>
 					<view class="shop-list-item-tag">&nbsp;&nbsp;&nbsp;{{item.state}}</view>
 				</view>
 				<view class="shop-list-item-title" style="color: white;">{{item.name}}</view>
 			</view>
 			<view class="shop-list-item" v-for="item,index in search_data" @click="go_to_player(item.id,item.img_url,item.name,item.state) " style="background-color: #dadada;" v-else>
 				<view class="img_show">
-					<image :src="item.img_url"></image>
+					<my-img :src="item.img_url" style="width: 100%;aspect-ratio:0.75;"></my-img>
 					<view class="shop-list-item-tag">&nbsp;&nbsp;&nbsp;{{item.state}}</view>
 				</view>
 				<view class="shop-list-item-title">{{item.name}}</view>
@@ -36,7 +36,11 @@
 
 <script>
 import ajax from '../../common/ajax'
+import myimg from '@/components/my-img/my-img.vue'
 	export default {
+		components:{
+			myimg
+		},
 		onLoad(e){
 			this.is_dark=getApp().globalData.dark
 			uni.getSystemInfo({
@@ -76,7 +80,7 @@ import ajax from '../../common/ajax'
 				uni.navigateTo({
 					url:"/pages/v_player/v_player?id="+url+'&img='+img+'&title='+title+'&part='+state,
 					animationDuration:300,
-					animationType:'zoom-fade-out'
+					animationType:'slide-in-right'
 				})
 			},
 			research(){
@@ -174,11 +178,6 @@ import ajax from '../../common/ajax'
 		animation-iteration-count: 1;
 	}
 	.img_show{
-		border-top-right-radius: 10px;
-		border-top-left-radius: 10px;
-	}
-	.img_show image{
-		width: 100%;
 		border-top-right-radius: 10px;
 		border-top-left-radius: 10px;
 	}

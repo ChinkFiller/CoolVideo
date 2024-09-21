@@ -1,7 +1,7 @@
+
 <script>
 	export default {
 		onLaunch: function() {
-			console.log('App Launch')
 			//初始化变量
 			if (uni.getStorageSync('dark')==''){
 				uni.setStorageSync('dark',false);
@@ -13,11 +13,15 @@
 				uni.setStorageSync("allow",[17000])
 			}
 			if(uni.getStorageSync("serverUrl")==""){
-				uni.setStorageSync("serverUrl","http://video.conyafertools.work")
+				uni.setStorageSync("serverUrl","https://video.conyafertools.work")
 			}
 			if(uni.getStorageSync("testMode")==""){
 				uni.setStorageSync("testMode",false)
 			}
+			//plus.navigator.closeSplashscreen()
+			setTimeout(() => {
+				plus.navigator.closeSplashscreen();
+			}, 2000);
 		},
 		onShow: function() {
 			console.log('App Show')
@@ -28,6 +32,9 @@
 		globalData:{
 			dark:uni.getStorageSync('dark'),
 			isPlayerFullScreen:false,
+			version:'1.27',
+			supportServerVersion:'1.26',
+			isBoot:true
 		}
 	}
 </script>

@@ -109,24 +109,6 @@ public class HttpSpringApplication {
                         GlobalValue.badWords.addAll(Arrays.asList(content.split(",")));
                     }
                 }
-                File autoGetter=new File("autoGetter");
-                if (autoGetter.exists()){
-                    try {
-                        // 清空临时目录
-                        Files.walk(Paths.get("autoGetter"))
-                                .sorted(Comparator.reverseOrder()) // 先删除子目录，再删除父目录
-                                .forEach(path -> {
-                                    try {
-                                        Files.delete(path);
-                                    } catch (IOException e) {
-                                        ToolsFunction.errorLog("文件"+path+"删除失败");
-                                    }
-                                });
-                        ToolsFunction.infoLog("爬虫程序文件删除成功");
-                    } catch (IOException e) {
-                        ToolsFunction.errorLog("爬虫程序文件删除失败，请稍后重试,Path:autoGetter");
-                    }
-                }
                 properties.putIfAbsent("port", 8080);
                 System.out.println(ToolsFunction.colorFont("""
                            _____            _  __      ___     _           \s

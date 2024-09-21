@@ -15,5 +15,7 @@ public class users {
     String icon;
     String setting;
     Integer vip;
+    long viptime;
+    Integer speedtimes;
 
 }

@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 
@@ -169,7 +170,13 @@ public class AdminController {
             return ToolsFunction.backSuccessDataList(filmService.findAllFilm());
         }
         if (function.equals("getAllUser")) {
-            return ToolsFunction.backSuccessDataList(userService.findAllUser());
+            List<Map> data=new ArrayList<>();
+            for (users item:userService.findAllUser()){
+                Map back=ToolsFunction.usersToMap(item);
+                back.put("viptime",ToolsFunction.timeToData(item.getViptime()));
+                data.add(back);
+            }
+            return ToolsFunction.backSuccessDataList(data);
         }
         if (function.equals("getAllBanner")) {
             return ToolsFunction.backSuccessDataList(adService.getAllBannerData());
@@ -221,6 +228,9 @@ public class AdminController {
             try {
                 if (id.equals("null")|| id.isEmpty()) {
                     ToolsFunction.backError(400);
+                }
+                if (userService.getOneUserByToken(token).getUser().equals(id)){
+                    return ToolsFunction.backErrorMsg("不能删除当前登录的账户");
                 }
                 userService.removeOneUser(id);
                 return ToolsFunction.backNoneDataSuceessMsg();
@@ -370,18 +380,22 @@ public class AdminController {
                 ToolsFunction.backError(400);
             }
             users uData=new users();
-            if (function.equals("updateUser")){
-                uData = userService.getOneUserByName(data.get("user").toString());
-                if (uData==null){
-                    ToolsFunction.backError(400);
-                }
-            }
             uData.setUser(data.get("user").toString());
             uData.setName(data.get("name").toString());
             uData.setVip(Integer.parseInt(data.get("vip").toString()));
             uData.setPawd(data.get("pawd").toString());
+            if (function.equals("updateUser")){
+                uData = userService.getOneUserByName(data.get("user").toString());
+                if (uData==null||!ToolsFunction.judgeDataLegal(data, new String[]{"viptime"})){
+                    ToolsFunction.backError(400);
+                }
+                uData.setViptime(ToolsFunction.dateToTime(data.get("viptime").toString()));
+            }
             if (function.equals("addUser")){
                 uData.setIcon(GlobalValue.icon);
+                if (userService.getOneUserByName(uData.getUser())!=null){
+                    return ToolsFunction.backErrorMsg("User Already Existed");
+                }
             }
             try {
                 if (function.equals("addUser")){

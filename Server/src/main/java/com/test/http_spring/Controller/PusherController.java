@@ -32,7 +32,7 @@ public class PusherController{
     @OnOpen
     public void onOpen(Session session, @PathParam(value = "userid") String userId) {
         try {
-            System.out.println(userId);
+            System.out.println(usersmaper.getOneUserByToken(userId));
             SESSION_POOL.put(userId,session);
         } catch (Exception e) {
             ToolsFunction.errorLog("[Pusher]"+e.getMessage());
@@ -43,14 +43,13 @@ public class PusherController{
     public void onClose(Session session,@PathParam(value = "userid") String userid) {
         try {
             SESSION_POOL.remove(userid);
-            System.out.println("成功删除"+userid);
         } catch (Exception e) {
             ToolsFunction.errorLog("[Pusher]"+e.getMessage());
         }
     }
 
     @OnMessage
-    public void onMessage(String message) {
+    public void onMessage(String message, @PathParam(value = "userid") String userId) {
         System.out.println("【WebSocket消息】收到客户端消息：" + message);
     }
     public boolean sendMessage(String msg,String token){

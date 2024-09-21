@@ -64,7 +64,7 @@
 		</scroll-view>
 		
 		<view class="other_video" v-for="item,index in others" @click="go_to_player(item.id,item.img_url,item.name,item.state)">
-			<image :src="item.img_url" mode="aspectFill" @error="errorImageHandle(index)"></image>
+			<my-img :src="item.img_url" mode="aspectFill" class="img"></my-img>
 			<view class="intruduce" v-if="is_dark">
 				<view class="text_bar">
 					<view class="other_video_title" style="color: white;">{{item.name}}</view>
@@ -98,9 +98,11 @@
 <script>
     import ajax from '../../common/ajax'
 	import uniIcons from '../../uni_modules/uni-icons/components/uni-icons/uni-icons.vue'
+	import myimg from '@/components/my-img/my-img.vue'
 	export default {
 		components:{
 			uniIcons,
+			myimg
 		},
 		data() {
 			return {
@@ -178,7 +180,6 @@
 			this.is_dark=getApp().globalData.dark
 			const parts=this.extractNumbers(e.part)
 			this.full=parts!=''?parts:1
-			uni.getSubNVueById("player").hide()
 			if (this.is_dark){
 				for (var y in this.fast_function_data){
 					this.fast_function_data[y].color="white"
@@ -291,24 +292,28 @@
 			}
 		},
 		onReady() {
-			uni.$on("fullscreen",res=>{//播放器全屏大小调整触发事件
-				plus.screen.lockOrientation('landscape-primary');
-				plus.navigator.hideSystemNavigation();
-				plus.navigator.setFullscreen(true)
-				this.colorSelectorShow=false
-				this.jubaoListisShow=false
-				uni.getSubNVueById("player").setStyle({
-					height:"100%"
+			console.log("主页渲染事件")
+			uni.getSubNVueById("player").hide()
+			setTimeout(()=>{
+				uni.$on("fullscreen",res=>{//播放器全屏大小调整触发事件
+					plus.screen.lockOrientation('landscape-primary');
+					plus.navigator.hideSystemNavigation();
+					plus.navigator.setFullscreen(true)
+					this.colorSelectorShow=false
+					this.jubaoListisShow=false
+					uni.getSubNVueById("player").setStyle({
+						height:"100%"
+					})
 				})
-			})
-			uni.$on("backToOrPage",res=>{//播放器还原屏幕大小触发函数
-				plus.screen.lockOrientation('portrait-primary');
-				plus.navigator.showSystemNavigation()
-				plus.navigator.setFullscreen(false)
-				uni.getSubNVueById("player").setStyle({
-					height:"300px"
+				uni.$on("backToOrPage",res=>{//播放器还原屏幕大小触发函数
+					plus.screen.lockOrientation('portrait-primary');
+					plus.navigator.showSystemNavigation()
+					plus.navigator.setFullscreen(false)
+					uni.getSubNVueById("player").setStyle({
+						height:"300px"
+					})
 				})
-			})
+			},300)
 			let view = uni.createSelectorQuery().select("#test");
 			let start=0;
 			view.boundingClientRect(data=>{
@@ -318,8 +323,6 @@
 					}
 				})
 			}).exec();
-		},
-		onShow() {
 		},
 		methods: {
 			test(){
@@ -333,7 +336,7 @@
 					})
 				}else if(uni.getStorageSync('login_token')==''){
 					uni.showToast({
-						title:"未登录不能发送弹幕",
+						title:"未登录",
 						icon:"error"
 					})	
 				}else{
@@ -361,6 +364,7 @@
 			go_to_player(id,img,title,state){
 				uni.getSubNVueById("player").hide()
 				uni.$emit('pauseVideo',{})
+				uni.$off('')
 				uni.redirectTo({
 					url:"/pages/v_player/v_player?id="+id+'&img='+img+'&title='+title+'&part='+state,
 					animationDuration:300,
@@ -468,28 +472,35 @@
 						this.danmuList=res.data
 					}
 				})
-				ajax.do_request("/get_video_url","GET",{id:this.id,num:num,cdn:this.cdn},(res)=>{ 
+				ajax.do_request("/get_video_url","GET",{id:this.id,num:num},(res)=>{ 
 					if (!res.error){
-						if(this.cdn==1){
-							this.video=uni.getStorageSync("serverUrl")+res.data.url
+						if (res.data.isOther===1){
+							this.video=res.data.url
 						}else{
-							if (res.data.isOther){
-								this.video=res.data.url
-							}else{
-								this.video=uni.getStorageSync("serverUrl")+res.data.url
-							}
+							this.video=uni.getStorageSync("serverUrl")+res.data.url
 						}
 						this.can_play=true
-						uni.getSubNVueById("player").show()
+						console.log(res.data)
+						if (res.data.cdn==1){
+							this.select=["普通路线","加速路线[已选择]"]
+							this.nowCdn=1
+							this.cdn=1
+							uni.showToast({
+								icon:'none',
+								title:"已开启加速"
+							})
+						}
 						setTimeout(()=>{
+							uni.getSubNVueById("player").show()
 							uni.$emit("play",{url:this.video,title:`第${num}话`,id:this.id,part:num})
 						},500)
 					}else{
 						uni.showToast({
-							title:"加载失败，请稍后重试"
+							title:"视频加载失败",
+							icon:'error'
 						})
 					}
-				},8000)
+				},15000)
 			},
 			send_msg(title){
 				plus.push.createMessage(
@@ -503,9 +514,6 @@
 									'id' : 'id',
 									'key': "key"
 								});
-			},
-			image_error(){
-				this.all_img_url='../static/nodata.png'
 			},
 			switch_title(){
 				if (this.now_main_title_style=='main_title'){
@@ -630,7 +638,6 @@
 					itemList:this.select,
 					itemColor:'red',
 					success:(res)=> {
-						//console.log(res.tapIndex)
 						if (res.tapIndex==1){
 							if (!this.cdn==1){
 								this.cdn=1
@@ -681,7 +688,6 @@
 										this.download_p=0
 										this.send_msg(`${this.title}下载成功`)
 									}
-									// 如果该资源不可下载或文件格式出错则提示用户
 									else {
 										uni.showToast({icon:'error',title:"下载失败"});
 									}
@@ -700,22 +706,17 @@
 								pname:"com.android.gallery3d",
 								fail:(res)=>{uni.showToast({
 									icon:'none',
-									title:'视频已保存在系统相册，请前往相册查看！',
+									title:'视频已保存在系统',
 									duration:3000
 								})}
 							})
 						}else{
 								uni.showModal({
 								title: '提示',
-								// 提示文字
 								content: '确认停止下载任务吗？',
-								// 取消按钮的文字自定义
 								cancelText: "取消",
-								// 确认按钮的文字自定义
 								confirmText: "停止",
-								//删除字体的颜色
 								confirmColor:'red',
-								//取消字体的颜色
 								cancelColor:'#000000',
 								success:(res)=> {
 									if (res.confirm){
@@ -723,8 +724,10 @@
 										uni.showToast({
 											title:"下载任务已取消"
 										})
-										this.download_p=0
-										this.fast_function_data[3].title="下载"
+										setTimeout(()=>{
+											this.download_p=0
+											this.fast_function_data[3].title="下载"
+										},300)
 									}
 								}
 							})
@@ -759,7 +762,21 @@
 				})
 				ajax.do_request("/get_video_url","GET",{id:this.id,num:num,cdn:this.cdn},(res)=>{
 					if (!res.error){
+						console.log(res.data)
 						this.nowCdn=this.cdn
+						if (res.data.cdn==1){
+							uni.showToast({
+								icon:'none',
+								title:"已开启加速"
+							})
+							this.select=["普通路线","加速路线[已选择]"]
+							this.nowCdn=1
+							this.cdn=1
+						}else{
+							this.select=["普通路线[已选择]","加速路线"]
+							this.nowCdn=0
+							this.cdn=0
+						}
 						if (res.data.isOther){
 							this.video=res.data.url
 						}else{
@@ -776,8 +793,13 @@
 							}
 						}
 						this.rememberHistory(tem_list)
+					}else{
+						uni.showToast({
+							title:"视频加载失败",
+							icon:'error'
+						})
 					}
-				},8000)
+				},15000)
 			}
 		}
 	}
@@ -836,6 +858,13 @@
 		padding: 1px 8px 1px 8px;
 		margin-top: 8px;
 		border-radius: 10px;
+	}
+	.img{
+		width: 30%;
+		height: 90%;
+		margin-top: 8px;
+		margin-left: 10px;
+		margin-right: 1.5%;
 	}
 	.jubao-list{
 		position: absolute;
@@ -902,7 +931,9 @@
 		height: 265px;
 	}
 	.other_video{
-		width: 100%;
+		width: 95%;
+		margin-left: 2.5%;
+		margin-right: 2.5%;
 		height: 100px;
 		margin-top: 5px;
 		margin-bottom: 5px;
@@ -910,19 +941,13 @@
 		border-top-style:solid;
 		border-top-width: 0px;
 		border-top-color: #8a8a8a;
-	}
-	.other_video image{
-		width: 30%;
-		height: 90%;
-		border-radius: 10px;
-		margin-top: 8px;
-		margin-left: 20px;
-		margin-right: 0;
+		display: flex;
+		flex-wrap: nowrap;
 	}
 	.intruduce{
 		width: 60%;
 		height: 100px;
-		float: right;
+		margin-left: 0px;
 	}
 	.other_video_title{
 		width: 100%;

@@ -1,8 +1,10 @@
 package com.test.http_spring.utils;
 
+import com.mysql.cj.exceptions.ClosedOnExpiredPasswordException;
 import com.mysql.cj.xdevapi.JsonArray;
 import com.sun.management.OperatingSystemMXBean;
 import com.test.http_spring.pojo.film_data;
+import com.test.http_spring.pojo.users;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -22,7 +24,9 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import java.lang.management.ManagementFactory;
+import java.net.HttpURLConnection;
 import java.net.URI;
+import java.net.URL;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -30,6 +34,8 @@ import java.nio.file.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -236,6 +242,29 @@ public class ToolsFunction {
         }
     }
 
+    public static Map usersToMap(users data){
+        HashMap back=new HashMap();
+        back.put("user",data.getUser());
+        back.put("pawd",data.getPawd());
+        back.put("name",data.getName());
+        back.put("icon",data.getIcon());
+        back.put("vip",data.getVip());
+        back.put("viptime",data.getViptime());
+        back.put("speedtimes",data.getSpeedtimes());
+        return back;
+    }
+
+    public static String timeToData(long time){
+        try {
+            Date date = new Date(time*1000);
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            return dateFormat.format(date);
+        }catch (Exception e){
+            System.out.println(e);
+            return null;
+        }
+    }
+
 
     /**
      * 判断数据是否合法，合法返回Ture，反之返回false
@@ -431,7 +460,46 @@ public class ToolsFunction {
      * @param number 目标视频的选集
      * @return 目标视频的地址
      */
-    public static String get_video_url(String id, String number){
+    public static String get_video_url(String id, String number,String keyword){
+        String firstUrl=findUrlMuteFun(id,number);
+        if (firstUrl.equals("error")){
+            try {
+                String urlString = "https://3583f29dcf8f47e8a246104341ef6058.apig.ap-southeast-1.huaweicloudapis.com/video?keyword="+keyword+"&id="+id+"&part="+number;
+                URL url = new URL(urlString);
+                HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("GET");
+                BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+                String inputLine;
+                StringBuilder response = new StringBuilder();
+                while ((inputLine = in.readLine()) != null) {
+                    response.append(inputLine);
+                }
+                in.close();
+                JSONObject jsonObject = new JSONObject(response.toString());
+                if (Integer.parseInt(jsonObject.get("error").toString())==0){
+                    String urlData=jsonObject.get("url").toString();
+//                    if (urlData.contains(".m3u8")){
+//
+//                    }else{
+//                        return urlData;
+//                    }
+                    return urlData;
+                }else{
+                    return "error";
+                }
+            } catch (Exception e) {
+                return "error";
+            }
+        }else{
+            return firstUrl;
+        }
+    }
+    public static String getNowFormatTime(){
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
+        return sdf.format(new Date());
+    }
+
+    private static String findUrlMuteFun(String id,String number){
         try {
             HttpClient client = HttpClient.newHttpClient();
             // First request
@@ -477,11 +545,6 @@ public class ToolsFunction {
             return "error";
         }
     }
-    public static String getNowFormatTime(){
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss");
-        return sdf.format(new Date());
-    }
-
 
     /**
      * 获取格式化的日期
@@ -556,11 +619,20 @@ public class ToolsFunction {
      * @return 是否有效，主要看是否超时
      */
     public static boolean checkUrlState(String url){
-        if (getTimeStamp()-Long.parseLong(url.split("&t=")[1])>14400){
-            return false;
-        }else {
-            return true;
+        try {
+            if (getTimeStamp()-Long.parseLong(url.split("&t=")[1])>14400){
+                return false;
+            }else {
+                return true;
+            }
+        }catch (Exception e){
+            if (getTimeStamp()-Long.parseLong(url.split("&timestamp=")[1])>14400){
+                return false;
+            }else {
+                return true;
+            }
         }
+
     }
 
 
@@ -648,51 +720,54 @@ public class ToolsFunction {
      **/
     public static Path writeDataToTem(String file){
         try {
-            ClassPathResource classPathResource = new ClassPathResource(file);
-            //保存临时目录
-//            Path tempDir = Files.createTempDirectory("extractedZip");
-
-            //保存一个实体目录
-            File tempFile=new File("autoGetter");
-            if (!tempFile.exists()){
-                if (!tempFile.mkdir()){
-                    return null;
+            File autoGetter=new File("autoGetter");
+            if (!autoGetter.exists()){
+                ClassPathResource classPathResource = new ClassPathResource(file);
+                //保存临时目录
+                //保存一个实体目录
+                File tempFile=new File("autoGetter");
+                if (!tempFile.exists()){
+                    if (!tempFile.mkdir()){
+                        return null;
+                    }
                 }
-            }
-            Path tempDir=tempFile.toPath();
-            InputStream zipInput=classPathResource.getInputStream();
-            File zipFile=new File(tempDir+"/test.zip");
-            OutputStream zipFileout=new FileOutputStream(zipFile);
-            byte[] zipbuffer=new byte[1024];
-            int size;
-            while ((size=zipInput.read(zipbuffer))!=-1){
-                zipFileout.write(zipbuffer,0,size);
-            }
-            zipFileout.close();
-            zipInput.close();
-            try (ZipFile zip = new ZipFile(zipFile)) {
-                Enumeration<? extends ZipEntry> entries = zip.entries();
-                while (entries.hasMoreElements()) {
-                    ZipEntry entry = entries.nextElement();
-                    Path entryPath = tempDir.resolve(entry.getName());
-                    if (entry.isDirectory()) {
-                        // 如果条目是目录，创建目录
-                        Files.createDirectories(entryPath);
-                    } else {
-                        // 如果条目是文件，创建文件并写入内容
-                        Files.createDirectories(entryPath.getParent());
-                        try (InputStream in = zip.getInputStream(entry);
-                             OutputStream out = Files.newOutputStream(entryPath)) {
-                            byte[] buffer = new byte[1024];
-                            int len;
-                            while ((len = in.read(buffer)) > 0) {
-                                out.write(buffer, 0, len);
+                Path tempDir=tempFile.toPath();
+                InputStream zipInput=classPathResource.getInputStream();
+                File zipFile=new File(tempDir+"/test.zip");
+                OutputStream zipFileout=new FileOutputStream(zipFile);
+                byte[] zipbuffer=new byte[1024];
+                int size;
+                while ((size=zipInput.read(zipbuffer))!=-1){
+                    zipFileout.write(zipbuffer,0,size);
+                }
+                zipFileout.close();
+                zipInput.close();
+                try (ZipFile zip = new ZipFile(zipFile)) {
+                    Enumeration<? extends ZipEntry> entries = zip.entries();
+                    while (entries.hasMoreElements()) {
+                        ZipEntry entry = entries.nextElement();
+                        Path entryPath = tempDir.resolve(entry.getName());
+                        if (entry.isDirectory()) {
+                            // 如果条目是目录，创建目录
+                            Files.createDirectories(entryPath);
+                        } else {
+                            // 如果条目是文件，创建文件并写入内容
+                            Files.createDirectories(entryPath.getParent());
+                            try (InputStream in = zip.getInputStream(entry);
+                                 OutputStream out = Files.newOutputStream(entryPath)) {
+                                byte[] buffer = new byte[1024];
+                                int len;
+                                while ((len = in.read(buffer)) > 0) {
+                                    out.write(buffer, 0, len);
+                                }
                             }
                         }
                     }
                 }
+                return tempDir;
+            }else {
+                return autoGetter.toPath();
             }
-            return tempDir;
         }catch (IOException e){
             System.out.println(e);
             return null;
@@ -749,5 +824,13 @@ public class ToolsFunction {
         } catch (IOException e) {
             return false;
         }
+    }
+    public static long dateToTime(String time){
+        String[] times=time.split("-");
+        // 创建日期对象
+        LocalDate date = LocalDate.of(Integer.parseInt(times[0]), Integer.parseInt(times[1]), Integer.parseInt(times[2]));
+        // 转换为时间戳（毫秒）
+        long timestamp = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli();
+        return timestamp/1000;
     }
 }

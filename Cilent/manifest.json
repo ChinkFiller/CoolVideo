@@ -1,6 +1,6 @@
 {
-    "name" : "mall",
-    "appid" : "__UNI__9625389",
+    "name" : "CoolVideo",
+    "appid" : "",
     "description" : "",
     "versionName" : "1.0.0",
     "versionCode" : "100",
@@ -11,10 +11,9 @@
         "nvueStyleCompiler" : "native",
         "compilerVersion" : 3,
         "splashscreen" : {
-            "alwaysShowBeforeRender" : true,
-            "waiting" : true,
-            "autoclose" : true,
-            "delay" : 0
+            "alwaysShowBeforeRender" : false,
+            "autoclose" : false,
+            "waiting" : false
         },
         /* 模块配置 */
         "modules" : {
@@ -60,9 +59,9 @@
             },
             "splashscreen" : {
                 "useOriginalMsgbox" : true,
-                "androidStyle" : "common",
+                "androidStyle" : "default",
                 "android" : {
-            
+                    "hdpi" : ""
                 }
             }
         }

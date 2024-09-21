@@ -10,27 +10,33 @@
         select * from userlib where user='${name}';
     </select>
     <select id="getOneUserByToken" parameterType="String" resultType="com.test.http_spring.pojo.users">
-        select * from userlib where cookie='${token}';
+        select * from userlib where user='${token}';
     </select>
     <update id="updateUserSetting" parameterType="String">
-        update userlib set setting='${data}' where cookie='${token}';
+        update userlib set setting='${data}' where user='${token}';
     </update>
     <update id="updateUserToken" parameterType="String">
         update userlib set cookie='${token}' where user='${name}';
     </update>
     <update id="updateUserIcon" parameterType="String">
-        update userlib set icon='${icon}' where cookie='${token}';
+        update userlib set icon='${icon}' where user='${token}';
     </update>
     <update id="updateUserName" parameterType="String">
-        update userlib set name='${name}' where cookie='${token}';
+        update userlib set name='${name}' where user='${token}';
     </update>
     <insert id="createUser" parameterType="com.test.http_spring.pojo.users">
-        insert into userlib values ('${user}','${pawd}','','${name}','${icon}','{"allow":[],"agree":[],"history":[]}',#{vip})
+        insert into userlib values ('${user}','${pawd}','','${name}','${icon}','{"allow":[],"agree":[],"history":[]}',#{vip},0,0)
     </insert>
     <delete id="removeOneUser" parameterType="String">
         delete from userlib where user='${username}'
     </delete>
     <update id="updateOneUser" parameterType="com.test.http_spring.pojo.users">
-        update userlib set name='${name}',pawd='${pawd}',vip='${vip}' where user='${user}'
+        update userlib set name='${name}',pawd='${pawd}',vip='${vip}',viptime=#{viptime} where user='${user}'
+    </update>
+    <update id="setUserTimes" parameterType="String">
+        update userlib set speedtimes=speedtimes+1 where user=#{token}
+    </update>
+    <update id="resetSpeedTime">
+        update userlib set speedtimes=0
     </update>
 </mapper>

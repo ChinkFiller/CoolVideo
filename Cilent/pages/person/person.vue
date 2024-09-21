@@ -1,18 +1,8 @@
 <template>
 	<page-meta page-style="background:#343434" v-if="is_dark"></page-meta>
 	<page-meta page-style="background:#eef0f1" v-else></page-meta>
-	<view class="full" v-show="is_asking" @click="is_asking=false">
-		<view class="asking">
-			<p style="font-size: 18px;margin-top: 5px;">提示</p>
-			<br>
-			<p>确认登出吗？</p>
-			<br>
-			<view class="option">
-				<button @click="is_asking=false;">取消</button>
-				<button style="color: red;" @click="quit_login()">确定</button>
-			</view>
-		</view>
-	</view>
+	<popup-asking ref="logout"></popup-asking>
+	<popup-input ref="nameinput"></popup-input>
 	<view class="top_nav">
 		<image src="../../static/bg.gif" mode="top left"></image>
 		<view class="mirror" style="background: linear-gradient(to top,rgba(52,52,52,1),rgba(255,255,255,0));" v-if="is_dark"></view>
@@ -26,7 +16,7 @@
 				<view class="tap">正式会员</view>
 			</view>
 		</view>
-		<view class="quit" @click="is_asking=true">
+		<view class="quit" @click="logoutbtn()">
 			<i class="fa fa-sign-out"></i>
 		</view>
 		<view class="back" @click="back()">
@@ -37,19 +27,21 @@
 		<view class="vip">
 		    <view class="vip_text_bar">
 		    	<view class="vip_main_title">会员中心</view>
-			    <view class="vip_tap">无限次视频加速，番剧更新提醒</view>
+				<view class="vip_tap" v-if="isvip">会员将于{{TimestampToDate(viptime)}}到期</view>
+			    <view class="vip_tap" v-else>无限次视频加速，番剧更新提醒</view>
 		    </view>
-			<button @click="vipShop()">立即购买</button>
+			<button @click="vipShop()" v-if="isvip">立即续费</button>
+			<button @click="vipShop()" v-else>立即购买</button>
 		</view>
 		<view class="download_tap">
 			<i class="fa fa-flash"></i>
-			<view class="download_tap_text">本月剩余视频加速次数{{0}}/{{5}}</view>
+			<view class="download_tap_text">{{speedcount}}</view>
 		</view>
 		<view style="position: relative;top: 100px;margin-left: 15px;color:#eef0f1;" v-if="is_dark">我的追番</view>
 		<view style="position: relative;top: 100px;margin-left: 15px;" v-else>我的追番</view>
 		<scroll-view scroll-x="true" class="my_allow">
 			<view class="my_allow_item" v-for="item,index in my_fllow" @click="go_to_player(item.id,item.img,item.title,item.state)">
-				<image :src="item.img_url" mode="aspectFill"></image>
+				<my-img :src="item.img_url" mode="aspectFill" class="img"></my-img>
 				<view class="my_allow_text" style="color: #eef0f1;" v-if="is_dark">{{item.title}}</view>
 				<view class="my_allow_text" v-else>{{item.title}}</view>
 			</view>
@@ -60,7 +52,15 @@
 
 <script>
 	import do_request from "../../common/ajax.js"
+	import popupasking from '@/components/popup-asking/popup-asking.vue'
+	import popupinput from '@/components/popup-input/popup-input.vue'
+	import myimg from '@/components/my-img/my-img.vue'
 	export default {
+		components:{
+			popupasking,
+			popupinput,
+			myimg
+		},
 		onLoad() {
 			this.user_msg=uni.getStorageSync("login_token");
 			this.is_dark=getApp().globalData.dark
@@ -85,16 +85,37 @@
 					this.my_fllow=data
 				}
 			},1000)
+			do_request.do_request('/getvipstate',"GET",{},(res)=>{
+				if (!res.error){
+					if (res.data.isvip){
+						this.speedcount="已开启会员尊享无限次加速"
+						this.viptime=res.data.viptime
+						this.isvip=true
+					}else{
+						this.speedcount=`本月剩余视频加速次数${res.data.maxspeedtime-res.data.speedtime}/${res.data.maxspeedtime}`
+					}
+				}
+			})
+			
 		},	
 		data() {
 			return {
 				user_msg:'',
-				is_asking:false,
 				is_dark:false,
-				my_fllow:[]
+				my_fllow:[],
+				speedcount:'本月剩余视频加速次数0/0',
+				isvip:false,
+				viptime:0
 			}
 		},
 		methods: {
+			logoutbtn(){
+				this.$refs.logout.show("提示","是否退出当前账号?",true,(res)=>{
+					if (res.state){
+						this.quit_login()
+					}
+				})
+			},
 			quit_login(){
 				//退出后删除登录信息
 				uni.setStorageSync("login_token","");
@@ -142,6 +163,13 @@
 					icon:"error"
 				})
 			},
+			TimestampToDate(Timestamp) {
+			    let now = new Date(Timestamp*1000),
+			    　　y = now.getFullYear(),
+			    　　m = now.getMonth() + 1,
+			    　　d = now.getDate();
+			    　　return y + "年" + (m < 10 ? "0" + m : m) + "月" + (d < 10 ? "0" + d : d)+"日";
+			},
 			iconOption(){
 				uni.showActionSheet({
 					itemList:["更改头像","更改昵称"],
@@ -185,33 +213,25 @@
 							});
 						}
 						if (res.tapIndex==1){
-							uni.showModal({
-							        title: '请输入新的昵称',
-							        content: '',
-							        editable:true,//是否显示输入框
-									placeholderText:'输入新的昵称',//输入框提示内容
-							        confirmText: '确认',
-							        cancelText: '取消',
-							        success: (res) => {
-							          if (res.confirm) {
-							            do_request.do_request("/rename","GET",{name:res.content},(back)=>{
-											if (!back.error){
-												uni.showToast({
-													title:"更改成功！",
-													icon:"none"
-												})
-												this.user_msg.name=res.content
-												uni.setStorageSync("login_token",this.user_msg)
-											}else{
-												uni.showToast({
-													title:"更改失败!"+back.msg,
-													icon:"none"
-												})
-											}
-										})
-							        }
-							    } 
-							});
+							this.$refs.nameinput.show('请输入新的昵称',this.user_msg.name,true,(res)=>{
+								if (res.state){
+									do_request.do_request("/rename","GET",{name:res.content},(back)=>{
+										if (!back.error){
+											uni.showToast({
+												title:"更改成功！",
+												icon:"none"
+											})
+											this.user_msg.name=res.content
+											uni.setStorageSync("login_token",this.user_msg)
+										}else{
+											uni.showToast({
+												title:"更改失败!"+back.msg,
+												icon:"none"
+											})
+										}
+									})
+								}
+							})
 						}
 					}
 				})
@@ -381,7 +401,7 @@
 		display: inline-block;
 		border-radius: 10px;
 	}
-	.my_allow_item image{
+	.my_allow_item .img{
 		width: 100%;
 		height: 80px;
 		border-radius: 10px;

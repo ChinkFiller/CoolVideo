@@ -1,6 +1,5 @@
 package com.test.http_spring.Controller;
 
-import com.test.http_spring.mapper.BadMsgMapper;
 import com.test.http_spring.pojo.BadMsg;
 import com.test.http_spring.pojo.film_data;
 import com.test.http_spring.pojo.users;
@@ -28,8 +27,8 @@ public class SearchController {
     UserService userService;
     @Autowired
     BadMsgService badMsgService;
-    private ConcurrentHashMap<String,String> urlDatas=new ConcurrentHashMap<>();
 
+    private ConcurrentHashMap<String,String> urlDatas=new ConcurrentHashMap<>();
     //模糊搜索某个信息
     @GetMapping("/search_data")
     public java.util.Map get_data(@RequestParam("key") String key){
@@ -83,75 +82,73 @@ public class SearchController {
             return ToolsFunction.backErrorMsg("");
         }
     }
-
-    //定时任务，清除失效的链接,每分钟清空一次
     @Scheduled(fixedRate = 60000)
     public void deleteDisableUrl(){
-        long nowTime=ToolsFunction.getTimeStamp();
-        //遍历验证码数组,查看过期验证码，并清除
-        urlDatas.entrySet().removeIf(entry -> nowTime - Long.parseLong(entry.getValue().split("&t=")[1]) > 14400);
+        urlDatas.entrySet().removeIf(entry -> ToolsFunction.checkUrlState(entry.toString()));
+    }
+
+
+    //获取视频链接，并缓存的函数
+    private HashMap getVideoUrl(String id,String num){
+        HashMap back=new HashMap();
+        film_data data=filmService.findFilmDataById(Integer.parseInt(id));
+        if (data==null){
+            return ToolsFunction.backErrorMsg("Data not Found");
+        }
+        String code=id+":"+num;
+        if (urlDatas.containsKey(code)&&ToolsFunction.checkUrlState(urlDatas.get(code))){
+            back.put("url",urlDatas.get(code));
+            back.put("isOther",1);
+            back.put("cdn",0);
+            return back;
+        }
+        String url= ToolsFunction.get_video_url(id,num,data.getName());
+        if (url.equals("error")){
+            return ToolsFunction.backErrorMsg("Data not Found");
+        }
+        urlDatas.put(code,url);
+        back.put("url",url);
+        back.put("cdn",0);
+        back.put("isOther",1);
+        return back;
     }
 
 
     //获取视频链接的api
     @GetMapping("/get_video_url")
-    public Map get_url(@RequestParam("id") int id, @RequestParam("num") int num, @RequestParam("cdn") int cdn, @RequestHeader(value = "token",required = false) String token){
+    public Map get_url(@RequestParam(value = "id") String id,@RequestParam("num") String num,@RequestParam(value = "cdn",required = false,defaultValue = "null") String cdn,@RequestHeader(value = "token",required = false,defaultValue = "null") String token){
         HashMap back=new HashMap<>();
-        if (0<=id && 0<num){
-            //测试视频地址
-            if (id==29){
-                back.put("isOther",1);
-                back.put("url","https://qiniu-web-assets.dcloud.net.cn/unidoc/zh/2minute-demo.mp4");
-                return ToolsFunction.backSuccessDataMap(back);
+        int line=cdn.equals("1")?1:0;
+        if (token.equals("null")){
+            return ToolsFunction.backSuccessDataMap(getVideoUrl(id,num));
+        }else{
+            users userdata=userService.getOneUserByToken(token);
+            if (userdata==null){
+                return ToolsFunction.backSuccessDataMap(getVideoUrl(id,num));
             }
-            //默认两个CDN模式，一个是自己配置的解析CDN，一个是本地的CDN
-            if (!GlobalValue.canUserCdn){//判断本地缓存可用性
-                cdn=0;
-            }
-            //判断是否有这个视频的ID
-            film_data fData=filmService.findFilmDataById(id);
-            if (fData==null||Integer.parseInt(ToolsFunction.getNumber(fData.getState()))<num){
-                return ToolsFunction.backError(400);
-            }
-            if (cdn==1){//本地CDN模式
+            if (cdn.equals("null")&&userdata.getVip()>=1){line=1;}
+            if (line==1){
                 File file=new File("video/"+id+"/"+num+".mp4");
                 if (file.exists()){//解析判断是否本地拥有资源，有的话就走本地，没有的话就走外链解析或者CDN
                     back.put("url","/videos/get_film?id="+id+"&num="+num+"&sign="+ ToolsFunction.MD5("AADM@conyafertools"+id+"@"+num+(System.currentTimeMillis()/1000)/18000));
                     back.put("isOther",0);
+                    back.put("cdn",1);
                     return ToolsFunction.backSuccessDataMap(back);
                 }else{//本地缓存不存在，自动更换外链解析或者CDN存储
-                    String code=id+":"+num;
-                    if (urlDatas.containsKey(code)&&ToolsFunction.checkUrlState(urlDatas.get(code))){
-                        back.put("url",urlDatas.get(code));
-                        return ToolsFunction.backSuccessDataMap(back);
+                    back=getVideoUrl(id,num);
+                    if (userdata.getSpeedtimes()>=GlobalValue.maxSpeedTimes&&userdata.getVip()==0){
+                        return ToolsFunction.backSuccessDataMap(getVideoUrl(id,num));
                     }
-                    String url= ToolsFunction.get_video_url(String.valueOf(id),String.valueOf(num));
-                    if (url.equals("error")){
-                        return ToolsFunction.backErrorMsg("Data not Found");
+                    if (!(userdata.getVip() == 2 || userdata.getVip() == 1)) {
+                        userService.setUserTimes(token);
                     }
-                    urlDatas.put(code,url);
-                    back.put("url",url);
-                    back.put("isOther",1);
+                    back.put("cdn",1);
+                    back.put("url","https://proxy.conyafertools.work/get_video.mp4?url="+ToolsFunction.encode(back.get("url").toString())+"&token="+ToolsFunction.MD5(back.get("url").toString()+"AADM@Conyafer"));
                     return ToolsFunction.backSuccessDataMap(back);
                 }
-            }else{//外链解析或者CDN资源解析
-                String code=id+":"+num;
-                if (urlDatas.containsKey(code)&&ToolsFunction.checkUrlState(urlDatas.get(code))){
-                    back.put("url",urlDatas.get(code));
-                    back.put("isOther",1);
-                    return ToolsFunction.backSuccessDataMap(back);
-                }
-                String url= ToolsFunction.get_video_url(String.valueOf(id),String.valueOf(num));
-                if (url.equals("error")){
-                    return ToolsFunction.backErrorMsg("Data not Found");
-                }
-                urlDatas.put(code,url);
-                back.put("url",url);
-                back.put("isOther",1);
-                return ToolsFunction.backSuccessDataMap(back);
+            }else{
+                return ToolsFunction.backSuccessDataMap(getVideoUrl(id,num));
             }
-        }else{
-            return ToolsFunction.backErrorMsg("Illegal parameter");
         }
     }
 

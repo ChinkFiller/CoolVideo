@@ -16,5 +16,9 @@ public interface UserService {
     void removeOneUser(String username);
     void updataOneUser(users data);
     boolean checkUser(String token);
+    void setUserTimes(String token);
+    void resetSpeedTime();
+
+    int removeToken(String user);
 
 }

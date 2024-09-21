@@ -176,6 +176,9 @@ public class FilmServiceImpl implements FilmService {
                         ));
                         ToolsFunction.infoLog("自动程序启动成功");
                     }else{
+                        if (GlobalValue.getterLogs.size()>100){
+                            GlobalValue.getterLogs.remove(0);
+                        }
                         GlobalValue.getterLogs.add("["+ToolsFunction.getNowFormatTime()+"] "+line);
                     }
                 }

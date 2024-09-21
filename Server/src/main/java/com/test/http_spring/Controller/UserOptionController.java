@@ -399,4 +399,32 @@ public class UserOptionController {
         return ToolsFunction.backSuccessDataList(allowData);
     }
 
+
+    //每个月的月重置所有的加速次数
+    @Scheduled(cron = "0 10 0 1 * ?")
+    public void GetWaterRealTimeData(){
+        userService.resetSpeedTime();
+    }
+
+    @GetMapping("/getvipstate")
+    public Map getVipState(@RequestHeader("token") String token){
+        users data=userService.getOneUserByToken(token);
+        if (data==null){
+            return ToolsFunction.backError(403);
+        }
+        HashMap back=new HashMap<>();
+        back.put("viptime",data.getViptime());
+        if (data.getVip()==2){
+            back.put("isvip",true);
+        }else{
+            if (data.getViptime()>System.currentTimeMillis()/1000 && data.getVip()==1) {
+                back.put("isvip", true);
+            }else{
+                back.put("isvip",false);
+            }
+        }
+        back.put("speedtime",data.getSpeedtimes());
+        back.put("maxspeedtime",GlobalValue.maxSpeedTimes);
+        return ToolsFunction.backSuccessDataMap(back);
+    }
 }

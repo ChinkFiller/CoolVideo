@@ -121,7 +121,7 @@
 					if (!res.error){
 						if (res.data.login_state){
 							//加载登录信息
-							uni.setStorageSync("login_token",{name:res.data.name,token:res.data.token,icon:res.data.icon})
+							uni.setStorageSync("login_token",{name:res.data.name,token:res.data.token,icon:res.data.icon,vip:res.data.vip})
 							//刷新历史记录
 							uni.setStorageSync("history",[17000]);
 							//刷新追番
