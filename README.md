@@ -1,8 +1,8 @@
 # 📺 CoolVideo（库视频）
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
-[![Java](https://img.shields.io/badge/JDK-17%2B-blue.svg)](#)
-[![UniApp](https://img.shields.io/badge/Ruoyi-V3.9.0-geen.svg)](#)
+[![Java](https://img.shields.io/badge/JDK-8%2B-blue.svg)](#)
+[![Ruoyi](https://img.shields.io/badge/Ruoyi-V3.9.0-geen.svg)](#)
 [![Vue3](https://img.shields.io/badge/Vue-3.x-brightgreen.svg)](#)
 [![UniApp](https://img.shields.io/badge/UniApp-Mobile--App-orange.svg)](#)
 
@@ -50,7 +50,7 @@
 ## 🖥️ 服务端部署
 
 ### 环境要求
-- JDK 17+
+- JDK 8+
 - Redis 8+
 - MySQL 8.0+
 - Minio (可选)
@@ -63,7 +63,7 @@
    java -jar ruoyi-admin.jar
    ```
 3. 访问后台管理端：  
-   `http://<your-server-ip>:8080`
+   `http://<your-server-ip>:8081`
 4. 默认管理员账号：  
    用户名：`admin`  
    密码：`admin123`
@@ -140,6 +140,3 @@ CoolVideo
 
 如有问题或建议，请提交 Issue 或联系作者。
 
----
-
-**CoolVideo — 打造智能的视频内容管理体验。 🎥**
