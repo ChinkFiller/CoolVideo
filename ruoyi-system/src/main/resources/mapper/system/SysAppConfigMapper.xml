@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysAppConfigMapper">
+
+    <resultMap type="SysAppConfig" id="SysAppConfigResult">
+        <result property="id"    column="id"    />
+        <result property="appName"    column="app_name"    />
+        <result property="appVersion"    column="app_version"    />
+        <result property="appId"    column="app_id"    />
+        <result property="plt"    column="plt"    />
+        <result property="updateUrl"    column="update_url"    />
+        <result property="finalVersion"    column="final_version"    />
+        <result property="state"    column="state"    />
+        <result property="forceUpdate"    column="forceUpdate"    />
+        <result property="description"    column="description"    />
+    </resultMap>
+
+    <sql id="selectSysAppConfigVo">
+        select id, app_name, app_version, app_id, plt, update_url, final_version, state, forceUpdate, cast(description as char) as description from sys_app_config
+    </sql>
+
+    <select id="selectSysAppConfigList" parameterType="SysAppConfig" resultMap="SysAppConfigResult">
+        <include refid="selectSysAppConfigVo"/>
+        <where>
+            <if test="appName != null  and appName != ''"> and app_name like concat('%', #{appName}, '%')</if>
+        </where>
+    </select>
+
+    <select id="getAppUpdateInfo" resultMap="SysAppConfigResult" parameterType="com.ruoyi.system.domain.SysAppConfig">
+        <include refid="selectSysAppConfigVo"/>
+        where app_id = #{appId} and plt = #{plt}
+    </select>
+
+    <select id="selectSysAppConfigById" parameterType="Long" resultMap="SysAppConfigResult">
+        <include refid="selectSysAppConfigVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertSysAppConfig" parameterType="SysAppConfig" useGeneratedKeys="true" keyProperty="id">
+        insert into sys_app_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="appName != null and appName != ''">app_name,</if>
+            <if test="appVersion != null">app_version,</if>
+            <if test="appId != null and appId != ''">app_id,</if>
+            <if test="plt != null and plt != ''">plt,</if>
+            <if test="updateUrl != null">update_url,</if>
+            <if test="finalVersion != null">final_version,</if>
+            <if test="state != null">state,</if>
+            <if test="forceUpdate != null">forceUpdate,</if>
+            <if test="description != null">description,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="appName != null and appName != ''">#{appName},</if>
+            <if test="appVersion != null">#{appVersion},</if>
+            <if test="appId != null and appId != ''">#{appId},</if>
+            <if test="plt != null and plt != ''">#{plt},</if>
+            <if test="updateUrl != null">#{updateUrl},</if>
+            <if test="finalVersion != null">#{finalVersion},</if>
+            <if test="state != null">#{state},</if>
+            <if test="forceUpdate != null">#{forceUpdate},</if>
+            <if test="description != null">#{description},</if>
+        </trim>
+    </insert>
+
+    <update id="updateSysAppConfig" parameterType="SysAppConfig">
+        update sys_app_config
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="appName != null and appName != ''">app_name = #{appName},</if>
+            <if test="appVersion != null">app_version = #{appVersion},</if>
+            <if test="appId != null and appId != ''">app_id = #{appId},</if>
+            <if test="plt != null and plt != ''">plt = #{plt},</if>
+            <if test="updateUrl != null">update_url = #{updateUrl},</if>
+            <if test="finalVersion != null">final_version = #{finalVersion},</if>
+            <if test="state != null">state = #{state},</if>
+            <if test="forceUpdate != null">forceUpdate = #{forceUpdate},</if>
+            <if test="description != null">description = #{description},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteSysAppConfigById" parameterType="Long">
+        delete from sys_app_config where id = #{id}
+    </delete>
+
+    <delete id="deleteSysAppConfigByIds" parameterType="String">
+        delete from sys_app_config where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

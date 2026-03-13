@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysOssConfigMapper">
+
+    <resultMap type="SysOssConfig" id="SysOssConfigResult">
+        <result property="ossConfigId"    column="oss_config_id"    />
+        <result property="configKey"    column="config_key"    />
+        <result property="accessKey"    column="access_key"    />
+        <result property="secretKey"    column="secret_key"    />
+        <result property="bucketName"    column="bucket_name"    />
+        <result property="prefix"    column="prefix"    />
+        <result property="endpoint"    column="endpoint"    />
+        <result property="domain"    column="domain"    />
+        <result property="isHttps"    column="is_https"    />
+        <result property="region"    column="region"    />
+        <result property="accessPolicy"    column="access_policy"    />
+        <result property="status"    column="status"    />
+        <result property="ext1"    column="ext1"    />
+        <result property="createBy"    column="create_by"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateBy"    column="update_by"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="remark"    column="remark"    />
+    </resultMap>
+
+    <sql id="selectSysOssConfigVo">
+        select oss_config_id, config_key, access_key, secret_key, bucket_name, prefix, endpoint, domain, is_https, region, access_policy, status, ext1, create_by, create_time, update_by, update_time, remark from sys_oss_config
+    </sql>
+
+    <select id="selectSysOssConfigList" parameterType="SysOssConfig" resultMap="SysOssConfigResult">
+        <include refid="selectSysOssConfigVo"/>
+        <where>
+            <if test="configKey != null  and configKey != ''"> and config_key = #{configKey}</if>
+            <if test="accessKey != null  and accessKey != ''"> and access_key = #{accessKey}</if>
+            <if test="secretKey != null  and secretKey != ''"> and secret_key = #{secretKey}</if>
+            <if test="bucketName != null  and bucketName != ''"> and bucket_name like concat('%', #{bucketName}, '%')</if>
+            <if test="prefix != null  and prefix != ''"> and prefix = #{prefix}</if>
+            <if test="endpoint != null  and endpoint != ''"> and endpoint = #{endpoint}</if>
+            <if test="domain != null  and domain != ''"> and domain = #{domain}</if>
+            <if test="isHttps != null  and isHttps != ''"> and is_https = #{isHttps}</if>
+            <if test="region != null  and region != ''"> and region like concat('%', #{region}, '%')</if>
+            <if test="accessPolicy != null  and accessPolicy != ''"> and access_policy = #{accessPolicy}</if>
+            <if test="status != null  and status != ''"> and status = #{status}</if>
+            <if test="ext1 != null  and ext1 != ''"> and ext1 = #{ext1}</if>
+        </where>
+    </select>
+
+    <select id="selectSysOssConfigByOssConfigId" parameterType="Long" resultMap="SysOssConfigResult">
+        <include refid="selectSysOssConfigVo"/>
+        where oss_config_id = #{ossConfigId}
+    </select>
+
+    <select id="isOnlyDefaultConfig" resultType="java.lang.Integer">
+        select COUNT(*) from sys_oss_config where status='1'
+    </select>
+
+    <select id="selectDefaultConfig" resultMap="SysOssConfigResult">
+        <include refid="selectSysOssConfigVo"/>
+        where status='1' limit 1
+    </select>
+
+    <insert id="insertSysOssConfig" parameterType="SysOssConfig">
+        insert into sys_oss_config
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="ossConfigId != null">oss_config_id,</if>
+            <if test="configKey != null and configKey != ''">config_key,</if>
+            <if test="accessKey != null">access_key,</if>
+            <if test="secretKey != null">secret_key,</if>
+            <if test="bucketName != null">bucket_name,</if>
+            <if test="prefix != null">prefix,</if>
+            <if test="endpoint != null">endpoint,</if>
+            <if test="domain != null">domain,</if>
+            <if test="isHttps != null">is_https,</if>
+            <if test="region != null">region,</if>
+            <if test="accessPolicy != null and accessPolicy != ''">access_policy,</if>
+            <if test="status != null">status,</if>
+            <if test="ext1 != null">ext1,</if>
+            <if test="createBy != null">create_by,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="updateBy != null">update_by,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="remark != null">remark,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="ossConfigId != null">#{ossConfigId},</if>
+            <if test="configKey != null and configKey != ''">#{configKey},</if>
+            <if test="accessKey != null">#{accessKey},</if>
+            <if test="secretKey != null">#{secretKey},</if>
+            <if test="bucketName != null">#{bucketName},</if>
+            <if test="prefix != null">#{prefix},</if>
+            <if test="endpoint != null">#{endpoint},</if>
+            <if test="domain != null">#{domain},</if>
+            <if test="isHttps != null">#{isHttps},</if>
+            <if test="region != null">#{region},</if>
+            <if test="accessPolicy != null and accessPolicy != ''">#{accessPolicy},</if>
+            <if test="status != null">#{status},</if>
+            <if test="ext1 != null">#{ext1},</if>
+            <if test="createBy != null">#{createBy},</if>
+            <if test="createTime != null">#{createTime},</if>
+            <if test="updateBy != null">#{updateBy},</if>
+            <if test="updateTime != null">#{updateTime},</if>
+            <if test="remark != null">#{remark},</if>
+        </trim>
+    </insert>
+
+    <update id="updateSysOssConfig" parameterType="SysOssConfig">
+        update sys_oss_config
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="configKey != null and configKey != ''">config_key = #{configKey},</if>
+            <if test="accessKey != null">access_key = #{accessKey},</if>
+            <if test="secretKey != null">secret_key = #{secretKey},</if>
+            <if test="bucketName != null">bucket_name = #{bucketName},</if>
+            <if test="prefix != null">prefix = #{prefix},</if>
+            <if test="endpoint != null">endpoint = #{endpoint},</if>
+            <if test="domain != null">domain = #{domain},</if>
+            <if test="isHttps != null">is_https = #{isHttps},</if>
+            <if test="region != null">region = #{region},</if>
+            <if test="accessPolicy != null and accessPolicy != ''">access_policy = #{accessPolicy},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="ext1 != null">ext1 = #{ext1},</if>
+            <if test="createBy != null">create_by = #{createBy},</if>
+            <if test="createTime != null">create_time = #{createTime},</if>
+            <if test="updateBy != null">update_by = #{updateBy},</if>
+            <if test="updateTime != null">update_time = #{updateTime},</if>
+            <if test="remark != null">remark = #{remark},</if>
+        </trim>
+        where oss_config_id = #{ossConfigId}
+    </update>
+
+    <update id="setOnlyDefaultConfig" parameterType="Long">
+        UPDATE sys_oss_config
+        SET status = CASE
+             WHEN oss_config_id = #{id} THEN '1'
+             ELSE '0'
+        END;
+    </update>
+
+    <delete id="deleteSysOssConfigByOssConfigId" parameterType="Long">
+        delete from sys_oss_config where oss_config_id = #{ossConfigId}
+    </delete>
+
+    <delete id="deleteSysOssConfigByOssConfigIds" parameterType="String">
+        delete from sys_oss_config where oss_config_id in
+        <foreach item="ossConfigId" collection="array" open="(" separator="," close=")">
+            #{ossConfigId}
+        </foreach>
+    </delete>
+</mapper>

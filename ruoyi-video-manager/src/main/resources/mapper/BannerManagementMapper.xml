@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.video.admin.mapper.BannerManagementMapper">
+
+
+    <resultMap type="com.ruoyi.video.domain.Banner" id="BannerResult">
+        <result property="id"    column="id"    />
+        <result property="cover"    column="cover"    />
+        <result property="title"    column="title"    />
+        <result property="vid"    column="vid"    />
+        <result property="url"    column="url"    />
+    </resultMap>
+
+    <sql id="selectBannerVo">
+        select id, cover, title, vid, url from cv_index_banner
+    </sql>
+
+    <select id="selectBannerList" parameterType="com.ruoyi.video.domain.Banner" resultMap="BannerResult">
+        <include refid="selectBannerVo"/>
+        <where>
+            <if test="title != null  and title != ''">title like CONCAT('%',#{title},'%')</if>
+        </where>
+    </select>
+
+    <select id="selectBannerById" parameterType="java.lang.Long" resultMap="BannerResult">
+        <include refid="selectBannerVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertBanner" parameterType="com.ruoyi.video.domain.Banner" useGeneratedKeys="true" keyProperty="id">
+        insert into cv_index_banner
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="cover != null">cover,</if>
+            <if test="title != null">title,</if>
+            vid,
+            url,
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="cover != null">#{cover},</if>
+            <if test="title != null">#{title},</if>
+            #{vid},
+            #{url},
+        </trim>
+    </insert>
+
+    <update id="updateBanner" parameterType="com.ruoyi.video.domain.Banner">
+        update cv_index_banner
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="cover != null">cover = #{cover},</if>
+            <if test="title != null">title = #{title},</if>
+            vid = #{vid},
+            url = #{url}
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteBannerById" parameterType="java.lang.String">
+        delete from cv_index_banner where id = #{id}
+    </delete>
+
+    <delete id="deleteBannerByIds" parameterType="java.lang.String">
+        delete from cv_index_banner where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

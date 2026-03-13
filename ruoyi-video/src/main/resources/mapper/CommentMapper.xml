@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.video.mapper.CommentMapper">
+
+    <resultMap id="CommentResultMap" type="com.ruoyi.video.domain.Comment">
+        <id column="id" property="id"/>
+        <result column="uid" property="uid"/>
+        <result column="vid" property="vid"/>
+        <result column="content" property="content"/>
+        <result column="time" property="time"/>
+        <result column="remote_location" property="remoteLocation"/>
+        <result column="agrees" property="agrees"/>
+        <association property="userData" javaType="com.ruoyi.common.core.domain.entity.SysUser"
+                     column="uid" select="selectUserById"/>
+    </resultMap>
+
+    <select id="selectUserById" resultType="com.ruoyi.common.core.domain.entity.SysUser">
+        select nick_name as nickName, avatar,user_id as userId
+        from sys_user
+        where user_id = #{id}
+    </select>
+
+    <sql id="findComments">
+        select
+            c.id,
+            c.uid,
+            c.vid,
+            c.content,
+            c.time,
+            c.remote_location,
+            (select count(*) from cv_comments_like where cid = c.id) as agrees
+        from cv_comments as c
+                 join sys_user as u on c.uid = u.user_id
+    </sql>
+
+    <!-- 使用 resultMap 的查询 -->
+    <select id="getCommentByVideoId" resultMap="CommentResultMap">
+        <include refid="findComments"/>
+        where vid = #{id} order by c.time desc
+    </select>
+
+    <insert id="insertComment" parameterType="com.ruoyi.video.domain.Comment" >
+        insert into cv_comments (vid,uid,content,time) values (#{vid},#{uid},#{content},now())
+    </insert>
+
+    <delete id="deleteComment" parameterType="int">
+        delete from cv_comments where id=#{id}
+    </delete>
+
+    <delete id="disagreeComment">
+        delete from cv_comments_like where cid=#{cid} and uid=#{uid}
+    </delete>
+
+
+    <select id="isUserAgreeThisComment" resultType="java.lang.Integer">
+        select count(*) from cv_comments_like where cid=#{cid} and uid=#{uid}
+    </select>
+
+    <select id="selectById" resultType="com.ruoyi.video.domain.Comment">
+        <include refid="findComments"/>
+        where c.id=#{id}
+    </select>
+
+    <insert id="agreeComment">
+        insert into cv_comments_like (cid,uid) values (#{cid},#{uid})
+    </insert>
+
+    <insert id="addComment" parameterType="com.ruoyi.video.domain.Comment">
+        insert into cv_comments (vid,uid,content,remote_ip,remote_location,time) values (#{vid},#{uid},#{content},#{remoteIp},#{remoteLocation},now())
+    </insert>
+
+</mapper>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.video.mapper.VideoMapper">
+
+    <!-- ✅ 定义 ResultMap -->
+    <resultMap id="VideoResultMap" type="com.ruoyi.video.domain.Video">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="state" property="state"/>
+        <result column="leader" property="leader"/>
+        <result column="actor" property="actor"/>
+        <result column="part" property="part"/>
+        <result column="ins" property="ins"/>
+        <result column="public_date" property="publicDate"/>
+        <result column="likes" property="likes"/>
+        <result column="subscribe" property="subscribe"/>
+        <result column="img_url" property="imgUrl"/>
+        <collection
+                property="tags"
+                ofType="java.lang.String"
+                select="selectTagByVideoId"
+                column="id"
+        />
+    </resultMap>
+
+    <select id="selectTagByVideoId" resultType="java.lang.String">
+        select d.dict_label
+        from cv_video_tags as t
+        inner join sys_dict_data as d on t.tag = d.dict_value
+        where t.vid = #{value}
+    </select>
+
+    <!-- ✅ 公共 SQL -->
+    <sql id="getVideo">
+        SELECT f.id, f.name, f.state, f.leader, f.actor, f.part, f.ins, f.public_date,f.img_url,
+               (SELECT COUNT(*) FROM cv_video_like WHERE vid = f.id) AS likes,
+               (SELECT COUNT(*) FROM cv_video_subscribe WHERE vid = f.id) AS subscribe,
+               (SELECT week FROM cv_week_table WHERE vid = f.id) AS week
+        FROM cv_video_info f
+    </sql>
+
+    <update id="updatePlayCount">
+        UPDATE cv_video_info
+        SET play_count = CASE id
+        <foreach collection="list" item="item">
+            WHEN #{item.id} THEN #{item.playCount}
+        </foreach>
+        END
+        WHERE id IN
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            #{item.id}
+        </foreach>
+    </update>
+
+    <!-- ✅ 使用 ResultMap 的查询 -->
+    <select id="getVideo" resultMap="VideoResultMap">
+        <include refid="getVideo"/>
+        WHERE f.id = #{id}
+    </select>
+
+    <select id="searchVideo" parameterType="string" resultMap="VideoResultMap">
+        <include refid="getVideo"/>
+        WHERE (name LIKE CONCAT('%', #{keyWord}, '%')
+        OR leader LIKE CONCAT('%', #{keyWord}, '%')
+        OR actor LIKE CONCAT('%', #{keyWord}, '%'))
+    </select>
+
+    <select id="getRecommendVideo" resultMap="VideoResultMap">
+        <include refid="getVideo"/>
+        WHERE public_date BETWEEN
+        (SELECT public_date FROM film_data WHERE id = #{id})
+        AND DATE_ADD((SELECT public_date FROM film_data WHERE id = #{id}), INTERVAL 3 MONTH)
+        LIMIT 15
+    </select>
+
+    <select id="getVideoByFilter" resultMap="VideoResultMap">
+        <include refid="getVideo"/>
+        <where>
+            <if test="letter != null">
+                AND name LIKE CONCAT('%', #{letter}, '%')
+            </if>
+            <if test="year != null and year != 0">
+                AND YEAR(public_date) = #{year}
+            </if>
+        </where>
+        <if test="order !=null">
+            <choose>
+                <when test="order == 'time'">  ORDER BY public_date DESC </when>
+                <when test="order == 'score'"> ORDER BY likes DESC       </when>
+                <otherwise>                    ORDER BY id DESC        </otherwise>
+            </choose>
+        </if>
+    </select>
+
+    <insert id="agreeVideo">
+        INSERT INTO cv_video_like(uid, vid) VALUES (#{uid}, #{vid})
+    </insert>
+
+    <delete id="disAgreeVideo">
+        DELETE FROM cv_video_like WHERE uid = #{uid} AND vid = #{vid}
+    </delete>
+
+    <select id="getUserSubscribeVideo" resultMap="VideoResultMap">
+        SELECT COALESCE(f.id, s.vid) AS id, f.name, f.state, f.leader, f.actor, f.part, f.ins, f.public_date,f.img_url
+        FROM cv_video_subscribe AS s
+                 LEFT JOIN cv_video_info AS f ON f.id = s.vid
+        WHERE s.uid = #{uid}
+        <if test="keyWord != null and keyWord != ''"> AND f.name LIKE CONCAT('%', #{keyWord}, '%')</if>
+    </select>
+
+    <select id="isUserSubscribeThisVideo" resultType="int">
+        SELECT COUNT(*) FROM cv_video_subscribe WHERE uid = #{uid} AND vid = #{vid}
+    </select>
+
+    <select id="isUserLikeThisVideo" resultType="int">
+        SELECT COUNT(*) FROM cv_video_like WHERE uid = #{uid} AND vid = #{vid}
+    </select>
+
+    <select id="getAllVideoPlayCount" resultType="com.ruoyi.video.domain.bo.PlayCountBo">
+        SELECT id, play_count as playCount FROM cv_video_info
+    </select>
+
+    <insert id="subscribeVideo">
+        INSERT INTO cv_video_subscribe (uid, vid) VALUES (#{uid}, #{vid})
+    </insert>
+
+    <delete id="cancelSubscribeVideo">
+        DELETE FROM cv_video_subscribe WHERE uid = #{uid} AND vid = #{vid}
+    </delete>
+</mapper>
+

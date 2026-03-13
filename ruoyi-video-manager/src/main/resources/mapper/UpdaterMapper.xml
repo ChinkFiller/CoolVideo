@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.video.admin.mapper.UpdaterMapper">
+
+    <update id="updateVideoData"
+            parameterType="com.ruoyi.video.domain.Video"
+            useGeneratedKeys="true"
+            keyProperty="id"
+    >
+        INSERT INTO cv_video_info
+        (name, state, leader, actor, img_url, part, ins, public_date, autoupdate_lock)
+        VALUES
+            (#{name}, #{state}, #{leader}, #{actor}, #{imgUrl}, #{part}, #{ins}, #{publicDate}, '0')
+        ON DUPLICATE KEY UPDATE
+                             id = LAST_INSERT_ID(id),
+                             name = VALUES(name),
+                             state =  VALUES(state),
+                             leader = VALUES(leader),
+                             actor = VALUES(actor),
+                             img_url =VALUES(img_url),
+                             part =  VALUES(part),
+                             ins = VALUES(ins),
+                             public_date = VALUES(public_date);
+    </update>
+
+    <update id="updateWeekData">
+        INSERT INTO cv_week_table (vid, week)
+        VALUES (#{vid}, #{week})
+        ON DUPLICATE KEY UPDATE
+            week = VALUES(week);
+    </update>
+    <select id="getVideoLockState" resultType="java.lang.String">
+        select autoupdate_lock from cv_video_info where name = #{id}
+    </select>
+
+    <insert id="setUpdateLog">
+        insert into cv_updater_log (message,time,level) values (#{message},now(),'info')
+    </insert>
+
+    <insert id="setErrorLog">
+        insert into cv_updater_log (message,time,level) values (#{message},now(),'error')
+    </insert>
+
+    <insert id="setWeekUpdateLog">
+        insert into cv_updater_log (message,time,level) values (concat('周期表已更新',#{count},'条'),now(),'info')
+    </insert>
+
+    <delete id="clearOldWeekData">
+        DELETE FROM cv_week_table
+        WHERE (vid, week) NOT IN
+        <foreach collection="list" item="item" open="(" close=")" separator=",">
+            (#{item.vid}, #{item.week})
+        </foreach>
+    </delete>
+
+    <delete id="clearOldUpdateLog">
+        DELETE FROM cv_updater_log;
+    </delete>
+</mapper>

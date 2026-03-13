@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.video.mapper.WeekMapper">
+
+    <!-- ✅ 定义 ResultMap -->
+    <resultMap id="VideoResultMap" type="com.ruoyi.video.domain.Video">
+        <id column="vid" property="id"/>
+        <result column="name" property="name"/>
+        <result column="state" property="state"/>
+        <result column="leader" property="leader"/>
+        <result column="actor" property="actor"/>
+        <result column="part" property="part"/>
+        <result column="ins" property="ins"/>
+        <result column="public_date" property="publicDate"/>
+        <result column="likes" property="likes"/>
+        <result column="subscribe" property="subscribe"/>
+        <result column="img_url" property="imgUrl"/>
+    </resultMap>
+
+    <select id="getWeekList" resultMap="VideoResultMap">
+        select *,
+               (SELECT COUNT(*) FROM cv_video_like WHERE vid = cv_week_table.id) AS likes,
+               (select COUNT(*) FROM cv_video_subscribe WHERE vid = cv_week_table.id) AS subscribe
+        from cv_week_table
+                 join cv_video_info on cv_video_info.id=cv_week_table.vid
+    </select>
+</mapper>

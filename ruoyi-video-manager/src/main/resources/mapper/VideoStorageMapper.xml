@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.video.admin.mapper.VideoStorageMapper">
+
+    <resultMap type="VideoStorage" id="VideoStorageResult">
+        <result property="id"    column="id"    />
+        <result property="vid"    column="vid"    />
+        <result property="part"    column="part"    />
+        <result property="filePath"    column="file_path"    />
+        <result property="ossId"    column="oss_id"    />
+    </resultMap>
+
+    <sql id="selectVideoStorageVo">
+        select id, vid, part, file_path, oss_id from cv_video_cache
+    </sql>
+
+    <select id="selectVideoStorageList" parameterType="VideoStorage" resultMap="VideoStorageResult">
+        <include refid="selectVideoStorageVo"/>
+        <where>
+            <if test="vid != null "> and vid = #{vid}</if>
+            <if test="ossId != null "> and oss_id = #{ossId}</if>
+        </where>
+    </select>
+
+    <select id="selectVideoStorageById" parameterType="Long" resultMap="VideoStorageResult">
+        <include refid="selectVideoStorageVo"/>
+        where id = #{id}
+    </select>
+
+    <insert id="insertVideoStorage" parameterType="VideoStorage" useGeneratedKeys="true" keyProperty="id">
+        insert into cv_video_cache
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="vid != null">vid,</if>
+            <if test="part != null">part,</if>
+            <if test="filePath != null">file_path,</if>
+            <if test="ossId != null">oss_id,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="vid != null">#{vid},</if>
+            <if test="part != null">#{part},</if>
+            <if test="filePath != null">#{filePath},</if>
+            <if test="ossId != null">#{ossId},</if>
+         </trim>
+    </insert>
+
+    <update id="updateVideoStorage" parameterType="VideoStorage">
+        update cv_video_cache
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="vid != null">vid = #{vid},</if>
+            <if test="part != null">part = #{part},</if>
+            <if test="filePath != null">file_path = #{filePath},</if>
+            <if test="ossId != null">oss_id = #{ossId},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteVideoStorageById" parameterType="Long">
+        delete from cv_video_cache where id = #{id}
+    </delete>
+
+    <delete id="deleteVideoStorageByIds" parameterType="String">
+        delete from cv_video_cache where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+</mapper>

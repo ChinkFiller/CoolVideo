@@ -1,0 +1,135 @@
+{
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^video-card": "@/components/VideoCard/VideoCard.vue",
+      "^tab-bar": "@/components/TabBar/TabBar.vue",
+      "^page-image": "@/components/PageImage/PageImage.vue",
+      "^base-page": "@/components/BasePage/BasePage.vue",
+      "^infinite-scroll-list": "@/components/InfiniteScrollList/InfiniteScrollList.vue",
+      "^verify-code-box": "@/components/VerifyCodeBox/VerifyCodeBox.vue"
+    }
+  },
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/index/searcher",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/weektable/weektable",
+      "style": {
+        "navigationStyle": "custom",
+        "enablePullDownRefresh": true
+      }
+    },
+    {
+      "path": "pages/detail/detail",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/user/login",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/user/register",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/videolib/filter",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/videolib/history",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/videolib/favorite",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/user/find-password",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/user/profile",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/dev/dev",
+      "style": {
+        "navigationBarTitleText": "开发者工具"
+      }
+    },
+    {
+      "path": "pages/player/player",
+      "style": {
+        "navigationStyle": "custom",
+        "app-plus": {
+          "softinputMode": "adjustResize",
+          "subNVues": [
+            {
+              "id": "player",
+              "path": "pages/player/v_player",
+              "style": {
+                "position": "static",
+                "width": "100%",
+                "height": "300px"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "path": "pages/setting/index",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/setting/detail",
+      "style": {
+        "navigationStyle": "custom"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "uni-app",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8",
+    "scrollIndicator": "none",
+    // 在APP平台都不显示滚动条
+    "app-plus": {
+      "bounce": "none",
+      "animationType": "slide-in-right",
+      "animationDuration": "350ms"
+    }
+  },
+  "uniIdRouter": {}
+}

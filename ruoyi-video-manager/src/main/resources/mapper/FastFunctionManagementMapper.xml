@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.video.admin.mapper.FastFunctionManagementMapper">
+
+    <resultMap type="com.ruoyi.video.domain.FastFunction" id="FastFunctionResult">
+        <result property="fid"    column="fid"    />
+        <result property="title"    column="title"    />
+        <result property="href"    column="href"    />
+        <result property="img"    column="img"    />
+    </resultMap>
+
+    <sql id="selectFastFunctionVo">
+        select fid, title, href, img from cv_fast_function
+    </sql>
+
+    <select id="selectFastFunctionList" parameterType="com.ruoyi.video.domain.FastFunction" resultMap="FastFunctionResult">
+        <include refid="selectFastFunctionVo"/>
+        <where>
+            <if test="title != null  and title != ''"> and title like concat('%',#{title},'%')</if>
+        </where>
+    </select>
+
+    <select id="selectFastFunctionByFid" parameterType="java.lang.Long" resultMap="FastFunctionResult">
+        <include refid="selectFastFunctionVo"/>
+        where fid = #{fid}
+    </select>
+
+    <insert id="insertFastFunction" parameterType="com.ruoyi.video.domain.FastFunction" useGeneratedKeys="true" keyProperty="fid">
+        insert into cv_fast_function
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="title != null">title,</if>
+            <if test="href != null">href,</if>
+            <if test="img != null">img,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="title != null">#{title},</if>
+            <if test="href != null">#{href},</if>
+            <if test="img != null">#{img},</if>
+        </trim>
+    </insert>
+
+    <update id="updateFastFunction" parameterType="com.ruoyi.video.domain.FastFunction">
+        update cv_fast_function
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="title != null">title = #{title},</if>
+            <if test="href != null">href = #{href},</if>
+            <if test="img != null">img = #{img},</if>
+        </trim>
+        where fid = #{fid}
+    </update>
+
+    <delete id="deleteFastFunctionByFid" parameterType="java.lang.Long">
+        delete from cv_fast_function where fid = #{fid}
+    </delete>
+
+    <delete id="deleteFastFunctionByFids" parameterType="java.lang.String">
+        delete from cv_fast_function where fid in
+        <foreach item="fid" collection="array" open="(" separator="," close=")">
+            #{fid}
+        </foreach>
+    </delete>
+
+</mapper>

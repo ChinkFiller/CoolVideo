@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.video.admin.mapper.VideoManagementMapper">
+
+    <resultMap type="com.ruoyi.video.domain.Video" id="VideoDataResult">
+        <result property="id"    column="id"    />
+        <result property="name"    column="name"    />
+        <result property="state"    column="state"    />
+        <result property="leader"    column="leader"    />
+        <result property="actor"    column="actor"    />
+        <result property="imgUrl"    column="img_url"    />
+        <result property="part"    column="part"    />
+        <result property="ins"    column="ins"    />
+        <result property="week" column="week"/>
+        <result property="publicDate"    column="public_date"    />
+        <result property="autoUpdateLock"    column="autoupdate_lock"    />
+        <collection
+                property="tags"
+                ofType="java.lang.String"
+                select="selectTagByVideoId"
+                column="id"
+        />
+    </resultMap>
+
+    <sql id="selectVideoDataVo">
+        SELECT i.id, name, state, leader, actor, part, ins, public_date,img_url,week,autoupdate_lock
+        FROM cv_video_info as i
+        left join cv_week_table as w on vid = i.id
+    </sql>
+
+    <select id="selectTagByVideoId" resultType="java.lang.String">
+        select d.dict_value
+        from cv_video_tags as t
+                 inner join sys_dict_data as d on t.tag = d.dict_value
+        where t.vid = #{value}
+    </select>
+
+    <select id="selectVideoList" parameterType="com.ruoyi.video.domain.Video" resultMap="VideoDataResult">
+        <include refid="selectVideoDataVo"/>
+        <where>
+            <if test="name != null  and name != ''"> and name like concat('%', #{name}, '%')</if>
+            <if test="state != null  and state != ''"> and state like concat('%', #{state}, '%')</if>
+            <if test="leader != null  and leader != ''"> and leader like concat('%', #{leader}, '%')</if>
+            <if test="actor != null  and actor != ''"> and actor like concat('%', #{actor}, '%')</if>
+            <if test="publicDate != null "> and DATE_FORMAT(public_date, '%Y-%m') = DATE_FORMAT(#{publicDate},'%Y-%m')</if>
+        </where>
+    </select>
+
+    <select id="selectVideoById" parameterType="java.lang.Long" resultMap="VideoDataResult">
+        <include refid="selectVideoDataVo"/>
+        where i.id = #{id}
+    </select>
+
+    <select id="getTopLike" resultType="java.util.Map">
+        SELECT
+            vid as id,
+            count( vid ) as number
+        FROM
+            cv_video_like
+        GROUP BY
+            vid
+        ORDER BY
+            count( vid ) DESC
+    </select>
+    <select id="selectVideoIdByTagCode" resultType="java.lang.Long">
+        select vid from cv_video_tags where tag=#{tagCode}
+    </select>
+
+
+    <insert id="insertVideo" parameterType="com.ruoyi.video.domain.Video" useGeneratedKeys="true" keyProperty="id">
+        insert into cv_video_info
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="name != null">name,</if>
+            <if test="state != null">state,</if>
+            <if test="leader != null">leader,</if>
+            <if test="actor != null">actor,</if>
+            <if test="imgUrl != null">img_url,</if>
+            <if test="part != null">part,</if>
+            <if test="ins != null">ins,</if>
+            <if test="publicDate != null">public_date,</if>
+            autoupdate_lock
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="name != null">#{name},</if>
+            <if test="state != null">#{state},</if>
+            <if test="leader != null">#{leader},</if>
+            <if test="actor != null">#{actor},</if>
+            <if test="imgUrl != null">#{imgUrl},</if>
+            <if test="part != null">#{part},</if>
+            <if test="ins != null">#{ins},</if>
+            <if test="publicDate != null">#{publicDate},</if>
+            '0'
+        </trim>
+    </insert>
+
+    <update id="updateVideo" parameterType="com.ruoyi.video.domain.Video">
+        update cv_video_info
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="name != null">name = #{name},</if>
+            <if test="state != null">state = #{state},</if>
+            <if test="leader != null">leader = #{leader},</if>
+            <if test="actor != null">actor = #{actor},</if>
+            <if test="imgUrl != null">img_url = #{imgUrl},</if>
+            <if test="part != null">part = #{part},</if>
+            <if test="ins != null">ins = #{ins},</if>
+            <if test="publicDate != null">public_date = #{publicDate},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <update id="updateVideoTagByTagCode">
+        <!-- list 不为空：执行更新+删除 -->
+        <if test="ids != null and list.size() > 0">
+            INSERT INTO cv_video_tags (vid, tag)
+            VALUES
+            <foreach collection="ids" item="id" separator=",">
+                (#{id}, #{tag})
+            </foreach>
+            ON DUPLICATE KEY UPDATE
+            tag = VALUES(tag);
+
+            DELETE FROM cv_video_tags
+            WHERE tag = #{tag}
+            AND vid NOT IN
+            <foreach collection="ids" item="id" open="(" separator="," close=")">
+                #{id}
+            </foreach>;
+
+        </if>
+
+
+        <!-- list 为空：删除所有 tag='test' 的记录 -->
+        <if test="ids == null or list.size() == 0">
+            DELETE FROM cv_video_tags WHERE tag = #{tag};
+        </if>
+
+    </update>
+
+    <update id="updateVideoTagByVideoId">
+            <!-- tags 不为空 -->
+            <if test="tags != null and tags.size() > 0">
+
+                <!-- 1. 插入或忽略已存在的 (vid, tag) -->
+                INSERT INTO cv_video_tags (vid, tag)
+                VALUES
+                <foreach collection="tags" item="t" separator=",">
+                    (#{vid}, #{t})
+                </foreach>
+                ON DUPLICATE KEY UPDATE
+                tag = VALUES(tag)
+                ;
+
+                <!-- 2. 删除该 vid 下不在 tags 中的 tag -->
+                DELETE FROM cv_video_tags
+                WHERE vid = #{vid}
+                AND tag NOT IN
+                <foreach collection="tags" item="t" open="(" separator="," close=")">
+                    #{t}
+                </foreach>
+                ;
+
+            </if>
+
+            <!-- tags 为空：删除该 vid 的所有 tag -->
+            <if test="tags == null or tags.size() == 0">
+                DELETE FROM cv_video_tags WHERE vid = #{vid};
+            </if>
+    </update>
+
+    <update id="lockInfo">
+        update cv_video_info set autoupdate_lock = '1' where id = #{id}
+    </update>
+    <update id="unLockInfo">
+        update cv_video_info set autoupdate_lock = '0' where id = #{id}
+    </update>
+
+    <delete id="deleteVideoById" parameterType="java.lang.Long">
+        delete from cv_video_info where id = #{id}
+    </delete>
+
+    <delete id="deleteVideoByIds" parameterType="java.lang.String">
+        delete from cv_video_info where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteVideoTag" parameterType="java.lang.Long">
+        delete from cv_video_tags where tag in
+          <foreach item="tagId" collection="array" open="(" separator="," close=")">
+              (select dict_value from sys_dict_data where dict_code=#{tagId})
+          </foreach>
+    </delete>
+</mapper>

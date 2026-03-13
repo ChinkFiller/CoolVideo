@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.video.mapper.HistoryMapper">
+
+    <resultMap id="HistoryResultMap" type="com.ruoyi.video.domain.History">
+        <id     property="uid"        column="uid"/>
+        <result property="vid"        column="vid"/>
+        <result property="part"       column="part"/>
+        <result property="watchTime"  column="watch_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <resultMap id="HistoryResultVoMap" type="com.ruoyi.video.domain.vo.UserHistoryInfoVo">
+        <id     property="uid"        column="uid"/>
+        <result property="vid"        column="vid"/>
+        <result property="part"       column="part"/>
+        <result property="watchTime"  column="watch_time"/>
+        <result property="updateTime" column="update_time"/>
+    </resultMap>
+
+    <update id="updateOneHistory">
+        INSERT INTO cv_user_history (uid, vid, part, watch_time,update_time)
+        VALUES (#{uid}, #{vid}, #{part}, #{watchTime}, #{updateTime})
+        ON DUPLICATE KEY UPDATE
+        part = VALUES(part),
+        watch_time = VALUES(watch_time),
+        update_time = VALUES(update_time)
+    </update>
+
+
+    <select id="getUserHistory" resultMap="HistoryResultVoMap">
+        select
+            vid as id, uid ,vid
+        from cv_user_history
+        where uid = #{uid}
+        <if test="keyWord != null and keyWord != ''">and (vid in (select id from cv_video_info where name like concat('%',#{keyWord},'%')))</if>
+        order by update_time desc
+    </select>
+
+
+    <select id="getAllUserHistory" resultMap="HistoryResultMap">
+        select
+            id, uid, vid, part, watch_time, update_time
+        from cv_user_history
+    </select>
+
+    <select id="getUserOneHistory" resultMap="HistoryResultMap">
+        select
+            id, uid, vid, part, watch_time, update_time
+        from cv_user_history
+        where vid = #{vid} and uid = #{uid}
+    </select>
+
+
+    <insert id="upsert">
+        INSERT INTO cv_user_history (uid, vid, part, watch_time,update_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.uid}, #{item.vid}, #{item.part}, #{item.watchTime},#{item.updateTime})
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        watch_time = VALUES(watch_time),
+        update_time = VALUES(update_time)
+    </insert>
+
+    <delete id="deleteHistory">
+        delete from cv_user_history where uid = #{uid} and vid=#{vid}
+    </delete>
+</mapper>

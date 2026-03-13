@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="zh">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Postman Email</title>
+</head>
+<body style="font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #ffffff;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+        <td align="center">
+            <table width="600" cellpadding="20" cellspacing="0" border="0">
+                <tr>
+                    <td align="left">
+                        <img th:src="${logoUrl}" alt="Logo" width="120" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <p style="font-size: 16px;">Hi,</p>
+                        <p style="font-size: 16px; line-height: 1.5;">
+                            您现在正在注册<span th:text="${appName}"></span>,以下是本次的验证码，120秒内有效。请妥善使用。如果您并没有注册本网站，请忽略这封邮件。
+                        </p>
+
+                        <!-- 验证码框 -->
+                        <p style="text-align: center;">
+                <span style="display: inline-block; background-color: #f96831; color: white; padding: 12px 24px; border-radius: 4px; font-size: 18px; font-weight: bold; letter-spacing: 2px;" th:text="${code}">
+                  123456
+                </span>
+                        </p>
+
+                        <p style="font-size: 16px;" th:text="${appName}"/>
+                        <p style="font-size: 12px; color: #666;" th:text="${date}"></p>
+                    </td>
+                </tr>
+
+                <tr>
+                    <td align="center">
+                        <p style="margin-bottom: 10px;"><strong>FOLLOW US</strong></p>
+                        <p>
+                            <a href="#"><img src="https://img.icons8.com/ios-filled/24/000000/x.png" alt="X" style="margin: 0 5px;" /></a>
+                            <a href="#"><img src="https://img.icons8.com/ios-filled/24/000000/linkedin.png" alt="LinkedIn" style="margin: 0 5px;" /></a>
+                            <a href="#"><img src="https://img.icons8.com/ios-filled/24/000000/github.png" alt="GitHub" style="margin: 0 5px;" /></a>
+                            <a href="#"><img src="https://img.icons8.com/ios-filled/24/000000/youtube-play.png" alt="YouTube" style="margin: 0 5px;" /></a>
+                            <a href="#"><img src="https://img.icons8.com/ios-filled/24/000000/twitch.png" alt="Twitch" style="margin: 0 5px;" /></a>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+</table>
+</body>
+</html>

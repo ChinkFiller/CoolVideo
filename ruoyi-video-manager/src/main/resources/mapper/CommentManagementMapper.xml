@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.video.admin.mapper.CommentManagementMapper">
+
+    <resultMap type="com.ruoyi.video.admin.domain.vo.CommentManagementVo" id="CommentResult">
+        <result property="id"    column="id"    />
+        <result property="uid"    column="uid"    />
+        <result property="content"    column="content"    />
+        <result property="vid"    column="vid"    />
+        <result property="time"    column="time"    />
+        <result property="nickName"    column="nick_name"    />
+        <result property="videoName"    column="name"    />
+        <result property="phoneNumber"    column="phonenumber"    />
+        <result property="email"    column="email"    />
+        <result property="remoteIp"    column="remote_ip"    />
+        <result property="remoteLocation"    column="remote_location"    />
+    </resultMap>
+
+
+
+    <sql id="selectCommentVo">
+        SELECT
+            c.id, c.uid, c.content, c.vid, c.time,c.remote_ip,c.remote_location,
+            u.user_name, u.nick_name, u.avatar,
+            v.name, u.phonenumber, u.email
+        FROM cv_comments c
+                 LEFT JOIN sys_user u ON c.uid = u.user_id
+                 LEFT JOIN cv_video_info v ON c.vid = v.id
+    </sql>
+
+    <select id="selectCommentList" parameterType="com.ruoyi.video.admin.domain.vo.CommentManagementVo" resultMap="CommentResult">
+        <include refid="selectCommentVo"/>
+        <where>
+            <if test="phoneNumber != null "> and  u.phonenumber like concat('%',#{phoneNumber},'%')</if>
+            <if test="email != null "> and u.email like concat('%',#{email},'%')</if>
+            <if test="nickName != null "> and u.nick_name like concat('%',#{nickName},'%')</if>
+            <if test="videoName != null "> and v.name like concat('%',#{videoName},'%')</if>
+            <if test="timeStart != null and timeEnd != null">
+                AND time BETWEEN #{timeStart} AND #{timeEnd}
+            </if>
+            <if test="timeStart != null and timeEnd == null">
+                AND time BETWEEN #{timeStart} AND NOW()
+            </if>
+            <if test="timeStart == null and timeEnd != null">
+                AND time &lt;= #{timeEnd}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectCommentById" parameterType="java.lang.String" resultMap="CommentResult">
+        <include refid="selectCommentVo"/>
+        where c.id = #{id}
+    </select>
+
+    <insert id="insertComment" parameterType="com.ruoyi.video.admin.domain.vo.CommentManagementVo" useGeneratedKeys="true" keyProperty="id">
+        insert into cv_comments
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="uid != null">uid,</if>
+            <if test="content != null">content,</if>
+            <if test="vid != null">vid,</if>
+            <if test="time != null">time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="uid != null">#{uid},</if>
+            <if test="content != null">#{content},</if>
+            <if test="vid != null">#{vid},</if>
+            <if test="time != null">#{time},</if>
+        </trim>
+    </insert>
+
+    <update id="updateComment" parameterType="com.ruoyi.video.admin.domain.vo.CommentManagementVo">
+        update cv_comments
+        <trim prefix="SET" suffixOverrides=",">
+            <if test="uid != null">uid = #{uid},</if>
+            <if test="content != null">content = #{content},</if>
+            <if test="vid != null">vid = #{vid},</if>
+            <if test="time != null">time = #{time},</if>
+        </trim>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteCommentById" parameterType="java.lang.String">
+        delete from cv_comments where id = #{id}
+    </delete>
+
+    <delete id="deleteCommentByIds" parameterType="java.lang.String">
+        delete from cv_comments where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteFilmDataByIds" parameterType="java.lang.String">
+        delete from cv_video_info where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+
+    <delete id="deleteFilmDataById" parameterType="java.lang.String">
+        delete from cv_video_info where id = #{id}
+    </delete>
+</mapper>

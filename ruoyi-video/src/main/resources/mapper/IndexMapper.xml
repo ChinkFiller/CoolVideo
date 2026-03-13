@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.video.mapper.IndexMapper">
+
+
+
+    <resultMap id="VideoResultMap" type="com.ruoyi.video.domain.Video">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="state" property="state"/>
+        <result column="leader" property="leader"/>
+        <result column="actor" property="actor"/>
+        <result column="part" property="part"/>
+        <result column="ins" property="ins"/>
+        <result column="type" property="type"/>
+        <result column="public_date" property="publicDate"/>
+        <result column="likes" property="likes"/>
+        <result column="subscribe" property="subscribe"/>
+        <result column="img_url" property="imgUrl"/>
+    </resultMap>
+
+
+    <sql id="VideoBase">
+        SELECT f.id,f.name,f.state,f.leader,f.actor,f.part,f.ins,f.public_date,f.img_url,
+               (SELECT COUNT(*) FROM cv_video_like WHERE vid = f.id) AS likes,
+               (select COUNT(*) FROM cv_video_subscribe WHERE vid = f.id) AS subscribe
+        FROM cv_video_info f
+    </sql>
+    <select id="getBanner" resultType="com.ruoyi.video.domain.Banner">
+        select id, cover, title, vid, url from cv_index_banner
+    </select>
+    <select id="getChineseComic" resultMap="VideoResultMap">
+        <include refid="VideoBase"/>
+        where type='jp' limit 10;
+    </select>
+    <select id="getHots" resultMap="VideoResultMap">
+        <include refid="VideoBase"/>
+        order by likes DESC limit 10;
+    </select>
+    <select id="getLast" resultMap="VideoResultMap">
+        <include refid="VideoBase"/>
+        ORDER BY public_date DESC  limit 10;
+    </select>
+    <select id="getFastFunction" resultType="com.ruoyi.video.domain.FastFunction">
+        SELECT fid, title, href, img FROM cv_fast_function
+    </select>
+    <select id="getIndexNotice" resultType="java.util.Map">
+        SELECT notice_title as title,cast(notice_content as char) as content FROM sys_notice WHERE notice_type = 2 and status = 0
+    </select>
+    <select id="getPopNotice" resultType="java.util.Map">
+        SELECT notice_title as title,cast(notice_content as char) as content FROM sys_notice WHERE notice_type = 1 and status = 0
+    </select>
+</mapper>

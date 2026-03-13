@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.video.admin.mapper.WeekTableManagementMapper">
+
+    <resultMap type="com.ruoyi.video.domain.WeekTable" id="WeekResult">
+        <result property="id"    column="id"    />
+        <result property="vid"    column="vid"    />
+        <result property="week"    column="week"    />
+    </resultMap>
+
+    <sql id="selectWeekVo">
+        select id,vid, week from cv_week_table
+    </sql>
+
+    <select id="selectWeekList" parameterType="com.ruoyi.video.domain.WeekTable" resultMap="WeekResult">
+        <include refid="selectWeekVo"/>
+        <where>
+            <if test="week != null "> and week = #{week}</if>
+            <if test="vid != null "> and vid = #{vid}</if>
+        </where>
+    </select>
+
+    <select id="selectWeekById" parameterType="java.lang.Long" resultMap="WeekResult">
+        <include refid="selectWeekVo"/>
+        where id = #{id}
+    </select>
+    <select id="isVideoOnGoing" resultType="java.lang.Integer">
+        select count(*) from cv_week_table where vid=#{vid}
+    </select>
+
+    <insert id="insertWeek" parameterType="com.ruoyi.video.domain.WeekTable">
+        insert into cv_week_table
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="vid != null">vid,</if>
+            <if test="week != null">week,</if>
+         </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="vid != null">#{vid},</if>
+            <if test="week != null">#{week},</if>
+         </trim>
+    </insert>
+
+    <update id="updateWeek" parameterType="com.ruoyi.video.domain.WeekTable">
+        update cv_week_table
+            <trim prefix="SET" suffixOverrides=",">
+                <if test="week != null">week = #{week},</if>
+            </trim>
+            where id = #{id}
+        </update>
+
+    <update id="updateWeekByVid" parameterType="com.ruoyi.video.domain.WeekTable">
+        INSERT INTO cv_week_table
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="vid != null">vid,</if>
+            <if test="week != null">week,</if>
+        </trim>
+        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
+            <if test="vid != null">#{vid},</if>
+            <if test="week != null">#{week},</if>
+        </trim>
+        ON DUPLICATE KEY UPDATE
+        <trim suffixOverrides=",">
+            <if test="week != null">week = VALUES(week),</if>
+        </trim>
+    </update>
+
+    <delete id="deleteWeekById" parameterType="java.lang.Long">
+        delete from cv_week_table where id = #{id}
+    </delete>
+
+    <delete id="deleteWeekByIds" parameterType="java.lang.String">
+        delete from cv_week_table where id in
+        <foreach item="id" collection="array" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </delete>
+    <delete id="deleteWeekByVid">
+        delete from cv_week_table where vid = #{vid}
+    </delete>
+</mapper>
